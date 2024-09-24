@@ -2,7 +2,7 @@
 using Services.Dtos.Users;
 using Services.Dtos.Users.Recoveries;
 
-namespace Services.Interfaces;
+namespace Services.Interfaces.Services;
 
 /// <summary>
 /// Интерфейс сервиса пользователя

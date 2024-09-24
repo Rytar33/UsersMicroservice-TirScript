@@ -13,6 +13,7 @@ public class RecoveryStartRequestValidator : AbstractValidator<RecoveryStartRequ
             .Matches(RegexPatterns.EmailPattern).WithMessage(ErrorMessages.RegexError);
 
         RuleFor(p => p.RequestCode)
-            .NotNull().Length(6).WithMessage(ErrorMessages.RegexError);
+            .Must(code => code == null || code.Length == 6)
+            .WithMessage(ErrorMessages.RegexError);
     }
 }

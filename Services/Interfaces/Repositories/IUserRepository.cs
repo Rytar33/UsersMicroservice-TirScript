@@ -1,6 +1,6 @@
 ﻿using Models;
 
-namespace Services.Interfaces;
+namespace Services.Interfaces.Repositories;
 
 /// <summary>
 /// Интерфейс репозитория пользователя

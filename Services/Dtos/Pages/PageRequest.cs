@@ -1,3 +1,3 @@
 ﻿namespace Services.Dtos.Pages;
 
-public record PageRequest(int Page, int PageSize);
+public record PageRequest(int Page = 1, int PageSize = 10);

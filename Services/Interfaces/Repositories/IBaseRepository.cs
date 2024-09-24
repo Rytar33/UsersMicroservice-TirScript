@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Models;
 
-namespace Services.Interfaces;
+namespace Services.Interfaces.Repositories;
 
 /// <summary>
 /// Базовый интерфейс под репозитории

@@ -25,12 +25,12 @@ public static class StringExtensions
     /// <returns>Возвращает случайно сгенерированные символы в виде токена</returns>
     public static string GetGenerateToken(this string token, int sizeToken = 6)
     {
-        var stringBuilder = new StringBuilder(token);
+        var stringBuilder = new StringBuilder(token).Clear();
         while (sizeToken > 0)
         {
             stringBuilder.Append(new Random().Next(0x0030, 0x007A)); // Генерация от 0 до 9 и A-Z, a-z
             sizeToken--;
         }
-        return token;
+        return stringBuilder.ToString();
     }
 }

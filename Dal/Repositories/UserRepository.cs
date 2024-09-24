@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Models;
-using Services.Interfaces;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Models.Exceptions;
 using Models.Validations;
+using Services.Interfaces.Repositories;
 
 namespace Dal.Repositories;
 
