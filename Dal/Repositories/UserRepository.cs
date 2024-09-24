@@ -16,18 +16,25 @@ public class UserRepository(DataContext dataContext) : IUserRepository
 {
     public async Task<List<User>> GetListByExpression(
        Expression<Func<User, bool>>? expression = null, 
-       CancellationToken cancellationToken = default)
+       CancellationToken cancellationToken = default,
+       params Expression<Func<User, object>>[] includes)
     {
         var users = dataContext.User.AsNoTracking();
         if (expression != null)
             users = users.Where(expression);
+        Array.ForEach(includes, i => users = users.Include(i));
         return await users.ToListAsync(cancellationToken);
     }
 
     public async Task<User?> GetByExpression(
         Expression<Func<User, bool>> expression,
-        CancellationToken cancellationToken = default)
-        => await dataContext.User.AsNoTracking().FirstOrDefaultAsync(expression, cancellationToken);
+        CancellationToken cancellationToken = default,
+        params Expression<Func<User, object>>[] includes)
+    {
+        var users = dataContext.User.AsNoTracking();
+        Array.ForEach(includes, i => users = users.Include(i));
+        return await users.FirstOrDefaultAsync(expression, cancellationToken);
+    }
 
     public async Task CreateAsync(User user, CancellationToken cancellationToken = default)
     {

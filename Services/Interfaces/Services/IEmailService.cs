@@ -1,5 +1,8 @@
 ﻿namespace Services.Interfaces.Services;
 
+/// <summary>
+/// Интерфейс серфиса электронной почты
+/// </summary>
 public interface IEmailService
 {
     /// <summary>

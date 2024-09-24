@@ -34,5 +34,10 @@ public class UserConfigurations : IEntityTypeConfiguration<User>
 
         builder.Property(p => p.RecoveryToken)
             .HasMaxLength(6);
+
+        builder.HasMany(p => p.Contacts)
+            .WithOne(p => p.User)
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -11,6 +11,11 @@ public sealed class DataContext : DbContext
     /// </summary>
     public DbSet<User> User { get; set; }
 
+    /// <summary>
+    /// Таблица "Контакт пользователя"
+    /// </summary>
+    public DbSet<UserContact> UserContact { get; set; }
+
     public DataContext() {}
 
     public DataContext(DbContextOptions<DataContext> options) : base(options) {}
@@ -24,5 +29,6 @@ public sealed class DataContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfigurations());
+        modelBuilder.ApplyConfiguration(new UserContactConfiguration());
     }
 }

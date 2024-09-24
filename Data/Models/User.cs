@@ -47,4 +47,9 @@ public class User : BaseEntity
     /// Токен для восстановления почты
     /// </summary>
     public string? RecoveryToken { get; set; }
+
+    /// <summary>
+    /// Список контактов пользователя
+    /// </summary>
+    public List<UserContact> Contacts { get; set; } = [];
 }

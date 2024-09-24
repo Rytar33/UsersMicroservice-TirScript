@@ -1,5 +1,8 @@
 ﻿namespace Services.Interfaces.Options;
 
+/// <summary>
+/// Интерфейс опций для конфигурации электронной почты
+/// </summary>
 public interface IEmailOptions 
 {
     string NameCompany { get; init; }

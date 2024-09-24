@@ -17,7 +17,8 @@ public interface IBaseRepository<TEntity> where TEntity : BaseEntity
     /// <returns>Если находит такую сущность, возвращает её, иначе возвращает null</returns>
     Task<TEntity?> GetByExpression(
         Expression<Func<TEntity, bool>> expression,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes);
 
     /// <summary>
     /// Получение списка сущностей по лямбда выражению ассинхронно
@@ -25,7 +26,10 @@ public interface IBaseRepository<TEntity> where TEntity : BaseEntity
     /// <param name="expression">Лямбда выражение</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns>Возвращает список сущностей</returns>
-    Task<List<TEntity>> GetListByExpression(Expression<Func<TEntity, bool>>? expression = null, CancellationToken cancellationToken = default);
+    Task<List<TEntity>> GetListByExpression(
+        Expression<Func<TEntity, bool>>? expression = null,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes);
 
     /// <summary>
     /// Создание сущности ассинхронно
