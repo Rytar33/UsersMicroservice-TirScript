@@ -52,4 +52,9 @@ public class User : BaseEntity
     /// Список контактов пользователя
     /// </summary>
     public List<UserContact> Contacts { get; set; } = [];
+
+    /// <summary>
+    /// Список языков, которыми владеет пользователь
+    /// </summary>
+    public List<UserLanguage> UserLanguages { get; set; } = [];
 }

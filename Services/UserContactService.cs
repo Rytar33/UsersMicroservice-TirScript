@@ -4,7 +4,7 @@ using Models.Exceptions;
 using Models.Extensions;
 using Models.Validations;
 using Services.Dtos.UserContacts;
-using Services.Dtos.Validators;
+using Services.Dtos.Validators.UserContacts;
 using Services.Interfaces.Repositories;
 using Services.Interfaces.Services;
 

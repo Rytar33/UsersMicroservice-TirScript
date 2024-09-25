@@ -2,7 +2,7 @@
 using Models.Validations;
 using Services.Dtos.Users;
 
-namespace Services.Dtos.Validators;
+namespace Services.Dtos.Validators.Users;
 
 public class UsersListRequestValidator : AbstractValidator<UsersListRequest>
 {

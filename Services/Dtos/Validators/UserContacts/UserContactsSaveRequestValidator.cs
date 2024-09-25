@@ -2,7 +2,7 @@
 using Models.Validations;
 using Services.Dtos.UserContacts;
 
-namespace Services.Dtos.Validators;
+namespace Services.Dtos.Validators.UserContacts;
 
 public class UserContactsSaveRequestValidator : AbstractValidator<UserContactsSaveRequest>
 {

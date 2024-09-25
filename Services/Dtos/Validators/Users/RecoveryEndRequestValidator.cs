@@ -2,7 +2,7 @@
 using Models.Validations;
 using Services.Dtos.Users.Recoveries;
 
-namespace Services.Dtos.Validators;
+namespace Services.Dtos.Validators.Users;
 
 public class RecoveryEndRequestValidator : AbstractValidator<RecoveryEndRequest>
 {

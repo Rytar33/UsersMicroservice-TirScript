@@ -7,7 +7,7 @@ using Services.Dtos.Pages;
 using Services.Dtos.Users;
 using Services.Dtos.Users.Recoveries;
 using Models.Extensions;
-using Services.Dtos.Validators;
+using Services.Dtos.Validators.Users;
 using Services.Interfaces.Repositories;
 using Services.Interfaces.Services;
 

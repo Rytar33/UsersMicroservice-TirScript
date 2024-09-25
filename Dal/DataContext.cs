@@ -16,6 +16,16 @@ public sealed class DataContext : DbContext
     /// </summary>
     public DbSet<UserContact> UserContact { get; set; }
 
+    /// <summary>
+    /// Таблица "Язык пользователя"
+    /// </summary>
+    public DbSet<UserLanguage> UserLanguage { get; set; }
+
+    /// <summary>
+    /// Таблица "Язык"
+    /// </summary>
+    public DbSet<Language> Language { get; set; }
+
     public DataContext() {}
 
     public DataContext(DbContextOptions<DataContext> options) : base(options) {}
@@ -30,5 +40,7 @@ public sealed class DataContext : DbContext
     {
         modelBuilder.ApplyConfiguration(new UserConfigurations());
         modelBuilder.ApplyConfiguration(new UserContactConfiguration());
+        modelBuilder.ApplyConfiguration(new UserLanguageConfiguration());
+        modelBuilder.ApplyConfiguration(new LanguageConfiguration());
     }
 }
