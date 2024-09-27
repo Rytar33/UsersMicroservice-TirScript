@@ -26,6 +26,21 @@ public sealed class DataContext : DbContext
     /// </summary>
     public DbSet<Language> Language { get; set; }
 
+    /// <summary>
+    /// Таблица "Новости"
+    /// </summary>
+    public DbSet<News> News { get; set; }
+
+    /// <summary>
+    /// Таблица "Теги"
+    /// </summary>
+    public DbSet<NewsTag> NewsTag { get; set; }
+
+    /// <summary>
+    /// Таблица "Связь новостей с тегами"
+    /// </summary>
+    public DbSet<NewsTagRelation> NewsTagRelation { get; set; }
+
     public DataContext() {}
 
     public DataContext(DbContextOptions<DataContext> options) : base(options) {}
@@ -42,5 +57,8 @@ public sealed class DataContext : DbContext
         modelBuilder.ApplyConfiguration(new UserContactConfiguration());
         modelBuilder.ApplyConfiguration(new UserLanguageConfiguration());
         modelBuilder.ApplyConfiguration(new LanguageConfiguration());
+        modelBuilder.ApplyConfiguration(new NewsConfiguration());
+        modelBuilder.ApplyConfiguration(new NewsTagConfiguration());
+        modelBuilder.ApplyConfiguration(new NewsTagRelationConfiguration());
     }
 }

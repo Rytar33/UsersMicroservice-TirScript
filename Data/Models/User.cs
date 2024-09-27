@@ -57,4 +57,9 @@ public class User : BaseEntity
     /// Список языков, которыми владеет пользователь
     /// </summary>
     public List<UserLanguage> UserLanguages { get; set; } = [];
+
+    /// <summary>
+    /// Список новостей, в которых пользователь является автором
+    /// </summary>
+    public List<News> NewsCreated { get; set; } = [];
 }

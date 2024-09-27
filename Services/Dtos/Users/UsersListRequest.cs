@@ -6,4 +6,4 @@ namespace Services.Dtos.Users;
 public record UsersListRequest(
     string? Search,
     EnumUserStatus? Status,
-    PageRequest Page);
+    PageRequest? Page);

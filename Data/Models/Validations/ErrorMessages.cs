@@ -15,4 +15,6 @@ public static class ErrorMessages
     public static string NotCoincideError = "{0} не совпадает";
 
     public static string LessThanError = "{0} не должно быть меньше {1}";
+
+    public static string GreaterThanError = "{0} не должно быть больше {1}";
 }

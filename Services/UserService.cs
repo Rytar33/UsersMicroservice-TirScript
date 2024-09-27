@@ -33,13 +33,14 @@ public class UserService(
 
         var countUsers = usersForConditions.Count();
 
-        usersForConditions = usersForConditions
-            .Skip((request.Page.Page - 1) * request.Page.PageSize)
-            .Take(request.Page.PageSize);
+        if (request.Page != null)
+            usersForConditions = usersForConditions
+                .Skip((request.Page.Page - 1) * request.Page.PageSize)
+                .Take(request.Page.PageSize);
 
         var usersItems = usersForConditions.Select(u => mapper.Map<User, UsersListItem>(u)).ToList();
 
-        return new UsersListResponse(usersItems, new PageResponse(request.Page.Page, request.Page.PageSize, countUsers));
+        return new UsersListResponse(usersItems, new PageResponse(countUsers, request.Page?.Page ?? 0, request.Page?.PageSize ?? 0));
     }
 
     public async Task<UserDetailResponse> GetDetail(int userId, CancellationToken cancellationToken = default)
