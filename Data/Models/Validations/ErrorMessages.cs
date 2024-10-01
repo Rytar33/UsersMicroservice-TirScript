@@ -10,6 +10,8 @@ public static class ErrorMessages
 
     public static string FutureError = "{0} не должен быть в будущем";
 
+    public static string PastError = "{0} не должен быть позднее чем {1}";
+
     public static string CoincideError = "С таким {0} уже существует {1}";
 
     public static string NotCoincideError = "{0} не совпадает";

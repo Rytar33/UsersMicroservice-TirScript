@@ -41,6 +41,16 @@ public sealed class DataContext : DbContext
     /// </summary>
     public DbSet<NewsTagRelation> NewsTagRelation { get; set; }
 
+    public DbSet<Product> Product { get; set; }
+
+    public DbSet<ProductCategory> ProductCategory { get; set; }
+
+    public DbSet<ProductCategoryParameter> ProductCategoryParameter { get; set; }
+
+    public DbSet<ProductCategoryParameterValue> ProductCategoryParameterValue { get; set; }
+
+    public DbSet<ProductCategoryParameterValueProduct> ProductCategoryParameterValueProduct { get; set; }
+
     public DataContext() {}
 
     public DataContext(DbContextOptions<DataContext> options) : base(options) {}
@@ -60,5 +70,10 @@ public sealed class DataContext : DbContext
         modelBuilder.ApplyConfiguration(new NewsConfiguration());
         modelBuilder.ApplyConfiguration(new NewsTagConfiguration());
         modelBuilder.ApplyConfiguration(new NewsTagRelationConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductCategoryParameterConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductCategoryParameterValueConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductCategoryParameterValueProductConfiguration());
     }
 }
