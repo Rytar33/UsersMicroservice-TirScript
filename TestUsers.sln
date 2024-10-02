@@ -5,15 +5,15 @@ VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{4F303F06-BA29-4E49-BDF7-63BF9FC54328}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enums", "Data\Enums\Enums.csproj", "{E49D5835-98EA-4335-807C-6CF6E842BCCF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestUsers.Data.Enums", "Data\TestUsers.Data.Enums\TestUsers.Data.Enums.csproj", "{E49D5835-98EA-4335-807C-6CF6E842BCCF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Data\Models\Models.csproj", "{3CC504D9-2E1C-4A0B-AE55-D9595DD01958}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestUsers.Data.Models", "Data\TestUsers.Data.Models\TestUsers.Data.Models.csproj", "{3CC504D9-2E1C-4A0B-AE55-D9595DD01958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dal", "Dal\Dal.csproj", "{B849340A-2AA7-4A98-BF5E-31D8B1395005}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestUsers.Data", "TestUsers.Data\TestUsers.Data.csproj", "{B849340A-2AA7-4A98-BF5E-31D8B1395005}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Services\Services.csproj", "{800457E4-369F-49EF-B28F-0D9FE02FCBC5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestUsers.Services", "TestUsers.Services\TestUsers.Services.csproj", "{800457E4-369F-49EF-B28F-0D9FE02FCBC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services.Tests", "Services.Tests\Services.Tests.csproj", "{1D7C38B9-A759-409E-AF38-36D02BFB5113}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestUsers.Services.Tests", "TestUsers.Services.Tests\TestUsers.Services.Tests.csproj", "{1D7C38B9-A759-409E-AF38-36D02BFB5113}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
