@@ -58,6 +58,8 @@ public class ProductCategoryService(DataContext db) : IProductCategoryService
     public async Task<BaseResponse> Create(ProductCategoryCreateRequest request, CancellationToken cancellationToken = default)
     {
         await new ProductCategoryCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
+        if (await db.ProductCategory.AnyAsync(pc => pc.Name == request.Name, cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(ProductCategory.Name), nameof(ProductCategory)));
         await db.ProductCategory.AddAsync(new ProductCategory(request.Name, request.ParentCategoryId), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
@@ -69,6 +71,9 @@ public class ProductCategoryService(DataContext db) : IProductCategoryService
 
         var productCategory = await db.ProductCategory.FindAsync([ request.Id ], cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
+
+        if (await db.ProductCategory.AnyAsync(pc => pc.Name == request.Name && request.Id != pc.Id, cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(ProductCategory.Name), nameof(ProductCategory)));
 
         productCategory.ParentCategoryId = request.ParentCategoryId;
         productCategory.Name = request.Name;

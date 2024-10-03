@@ -75,10 +75,13 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
     public async Task<BaseResponse> Create(ProductCategoryParameterCreateRequest request, CancellationToken cancellationToken = default)
     {
         await new ProductCategoryParameterCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
+        if (await db.ProductCategoryParameter.AnyAsync(pcp => pcp.Name == request.Name, cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(ProductCategoryParameter.Name), nameof(ProductCategoryParameter)));
         var parameter = new ProductCategoryParameter(request.Name, request.ProductCategoryId);
         await db.ProductCategoryParameter.AddAsync(parameter, cancellationToken);
 
         var values = request.Values
+            .Distinct()
             .Select(v => new ProductCategoryParameterValue(v, parameter.Id))
             .ToList();
         if (values.Count > 0)
@@ -94,6 +97,9 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
 
         var parameter = await db.ProductCategoryParameter.FindAsync([request.Id], cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
+
+        if (await db.ProductCategoryParameter.AnyAsync(pcp => pcp.Name == request.Name && pcp.Id != request.Id, cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(ProductCategoryParameter.Name), nameof(ProductCategoryParameter)));
 
         parameter.Name = request.Name;
         parameter.ProductCategoryId = request.ProductCategoryId;

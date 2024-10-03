@@ -1,5 +1,4 @@
 ﻿using TestUsers.Data.Models;
-using TestUsers.Services.Extensions;
 using TestUsers.Services.Dtos.UserContacts;
 using TestUsers.Services.Dtos.Validators.UserContacts;
 using TestUsers.Services.Interfaces.Services;
@@ -39,6 +38,10 @@ public class UserContactService(DataContext db) : IUserContactService
             .Where(nuc => nuc.Id != null)
             .Select(nuc => new UserContact(nuc.Name, nuc.Value, request.UserId))
             .ToList();
+
+        if (await db.UserContact.AnyAsync(uc => newUserContacts.Any(nuc => nuc.UserId == uc.UserId && nuc.Name == uc.Name), cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(UserContact.Name), nameof(UserContact)));
+
         if (newUserContacts.Count != 0)
             await db.UserContact.AddRangeAsync(newUserContacts, cancellationToken);
 

@@ -8,7 +8,6 @@ using TestUsers.Services.Interfaces.Services;
 using TestUsers.Services.Exceptions;
 using TestUsers.Data;
 using FluentValidation;
-using System.Data.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace TestUsers.Services;
@@ -60,6 +59,9 @@ public class NewsService(DataContext db) : INewsService
     {
         await new NewsCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
+        if (await db.News.AnyAsync(n => n.Title == request.Title, cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(News.Title), nameof(News)));
+
         var news = new News(request.Title, request.Description, DateTime.UtcNow, request.AuthorId);
 
         await db.News.AddAsync(news, cancellationToken);
@@ -76,6 +78,9 @@ public class NewsService(DataContext db) : INewsService
             .Where(nt => !existingTags.Any(et => et.Name.Equals(nt, StringComparison.OrdinalIgnoreCase)))
             .Select(nt => new NewsTag(nt))
             .ToList();
+
+        if (await db.NewsTag.AnyAsync(nt => tagsToAdd.Any(t => t.Name == nt.Name), cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(NewsTag.Name), nameof(NewsTag)));
 
         // Добавляем новые теги в базу данных
         if (tagsToAdd.Count != 0)
@@ -103,6 +108,9 @@ public class NewsService(DataContext db) : INewsService
         // Получаем новость по идентификатору
         var news = await db.News.FindAsync(new object[] { request.Id }, cancellationToken)
              ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(News)));
+
+        if (!await db.News.AnyAsync(n => n.Title == request.Title && n.Id != request.Id, cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(News.Title), nameof(News)));
 
         // Обновляем данные новости
         news.AuthorId = request.AuthorId;
@@ -147,6 +155,9 @@ public class NewsService(DataContext db) : INewsService
             .Where(nt => !existingTags.Any(et => et.Name.Equals(nt, StringComparison.OrdinalIgnoreCase)))
             .Select(nt => new NewsTag(nt))
             .ToList();
+
+        if (await db.NewsTag.AnyAsync(nt => tagsToAdd.Any(t => t.Name == nt.Name), cancellationToken))
+            throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(NewsTag.Name), nameof(NewsTag)));
 
         // Добавляем новые теги в базу данных
         if (tagsToAdd.Count != 0)

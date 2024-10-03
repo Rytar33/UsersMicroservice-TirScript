@@ -3,9 +3,9 @@
 namespace TestUsers.Services.Dtos.Products;
 
 public record ProductListRequest(
-    int? CategoryId,
-    string? Search,
-    decimal? FromAmount,
-    decimal? ToAmount,
     List<int> CategoryParametersValuesIds,
-    PageRequest? Page);
+    int? CategoryId = null,
+    string? Search = null,
+    decimal? FromAmount = null,
+    decimal? ToAmount = null,
+    PageRequest? Page = null);

@@ -83,17 +83,22 @@ public class ProductService(DataContext db) : IProductService
 
         if (request.Id == null)
         {
+            if (await db.Product.AnyAsync(p => p.Name == request.Name, cancellationToken))
+                throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(Product.Name), nameof(Product)));
             var product = new Product(request.Name, request.Description, request.DateCreated, request.Amount, request.CategoryId);
             await db.Product.AddAsync(product, cancellationToken);
             await db.ProductCategoryParameterValueProduct.AddRangeAsync(
-                request.CategoryParametersValuesIds.Select(cpvi => 
-                    new ProductCategoryParameterValueProduct(cpvi, product.Id)),
-                cancellationToken);
+                request.CategoryParametersValuesIds
+                .Distinct()
+                .Select(cpvi => new ProductCategoryParameterValueProduct(cpvi, product.Id)),cancellationToken);
         }
         else
         {
             var product = await db.Product.FindAsync([ request.Id ], cancellationToken)
                 ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
+
+            if (await db.Product.AnyAsync(p => p.Name == request.Name && request.Id != p.Id, cancellationToken))
+                throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(Product.Name), nameof(Product)));
 
             product.Name = request.Name;
             product.Description = request.Description;
@@ -111,6 +116,7 @@ public class ProductService(DataContext db) : IProductService
                 db.ProductCategoryParameterValueProduct.RemoveRange(productCategoryParameterValuesOnDelet);
 
             var productCategoryParameterValuesOnAdd = request.CategoryParametersValuesIds
+                .Distinct()
                 .Where(cpvi => !db.ProductCategoryParameterValueProduct
                     .Any(pcpvp => pcpvp.ProductId == product.Id
                         && pcpvp.ProductCategoryParameterValueId == cpvi))
