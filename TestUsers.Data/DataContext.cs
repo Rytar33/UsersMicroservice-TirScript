@@ -22,6 +22,11 @@ public sealed class DataContext : DbContext
     public DbSet<UserLanguage> UserLanguage { get; set; }
 
     /// <summary>
+    /// Таблица "Сохранённые фильтры пользователей"
+    /// </summary>
+    public DbSet<UserSaveFilter> UserSaveFilter { get; set; }
+
+    /// <summary>
     /// Таблица "Язык"
     /// </summary>
     public DbSet<Language> Language { get; set; }
@@ -41,14 +46,29 @@ public sealed class DataContext : DbContext
     /// </summary>
     public DbSet<NewsTagRelation> NewsTagRelation { get; set; }
 
+    /// <summary>
+    /// Таблица "Товар"
+    /// </summary>
     public DbSet<Product> Product { get; set; }
 
+    /// <summary>
+    /// Таблица "Категории для товаров"
+    /// </summary>
     public DbSet<ProductCategory> ProductCategory { get; set; }
 
+    /// <summary>
+    /// Таблица "Параметры для категорий товаров"
+    /// </summary>
     public DbSet<ProductCategoryParameter> ProductCategoryParameter { get; set; }
 
+    /// <summary>
+    /// Таблица "Значении параметра для категории товаров"
+    /// </summary>
     public DbSet<ProductCategoryParameterValue> ProductCategoryParameterValue { get; set; }
 
+    /// <summary>
+    /// Таблица "Выбранные значение параметра для товара"
+    /// </summary>
     public DbSet<ProductCategoryParameterValueProduct> ProductCategoryParameterValueProduct { get; set; }
 
     public DataContext() {}
@@ -66,6 +86,7 @@ public sealed class DataContext : DbContext
         modelBuilder.ApplyConfiguration(new UserConfigurations());
         modelBuilder.ApplyConfiguration(new UserContactConfiguration());
         modelBuilder.ApplyConfiguration(new UserLanguageConfiguration());
+        modelBuilder.ApplyConfiguration(new UserSaveFilterConfiguration());
         modelBuilder.ApplyConfiguration(new LanguageConfiguration());
         modelBuilder.ApplyConfiguration(new NewsConfiguration());
         modelBuilder.ApplyConfiguration(new NewsTagConfiguration());

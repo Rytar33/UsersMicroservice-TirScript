@@ -10,10 +10,11 @@ using TestUsers.Services.Exceptions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using TestUsers.Services.Dtos.ProductCategoryParameters;
+using TestUsers.Services.Dtos.UserSaveFilters;
 
 namespace TestUsers.Services;
 
-public class ProductService(DataContext db) : IProductService
+public class ProductService(DataContext db, IUserSaveFilterService userSaveFilterService) : IProductService
 {
     public async Task<ProductListResponse> GetList(ProductListRequest request, CancellationToken cancellationToken = default)
     {
@@ -54,6 +55,8 @@ public class ProductService(DataContext db) : IProductService
                     p.ProductCategory.Name))
             .ToList();
 
+        if (request.SaveFilter && !string.IsNullOrWhiteSpace(request.FilterName) && request.UserId.HasValue)
+            await userSaveFilterService.SaveFilter(new UserSaveFilterRequest<ProductListRequest>(request.UserId.Value, request.FilterName, request), cancellationToken);
         return new ProductListResponse(productsItems, new PageResponse(countProducts, request.Page?.Page ?? 0, request.Page?.PageSize ?? 0));
     }
 

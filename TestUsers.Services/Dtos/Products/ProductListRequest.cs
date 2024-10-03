@@ -8,4 +8,7 @@ public record ProductListRequest(
     string? Search = null,
     decimal? FromAmount = null,
     decimal? ToAmount = null,
+    bool SaveFilter = false,
+    string? FilterName = null,
+    int? UserId = null,
     PageRequest? Page = null);

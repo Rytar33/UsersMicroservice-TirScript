@@ -7,6 +7,7 @@ using TestUsers.Services.Interfaces.Services;
 using TestUsers.Services.Exceptions;
 using Xunit;
 using TestUsers.Services.Dtos.Pages;
+using Newtonsoft.Json;
 
 namespace TestUsers.Services.Tests;
 
@@ -24,14 +25,14 @@ public class ProductServiceTests
             .UseInMemoryDatabase(databaseName: nameof(ProductServiceTests))
             .Options;
         _dataContext = new DataContext(_dbContextOptions);
-        _productService = new ProductService(_dataContext);
+        _productService = new ProductService(_dataContext, new UserSaveFilterService(_dataContext));
     }
 
     /// <summary>
-    /// Тест для метода GetList, проверяющий возвращаемый список продуктов.
+    /// Тест для метода GetList, проверяющий возвращаемый список продуктов и сохранение фильтров.
     /// </summary>
     [Fact]
-    public async Task GetList_ShouldReturnProductsBasedOnSearchConditions()
+    public async Task GetList_ShouldReturnProductsBasedOnSearchConditions_AndSaveFilterWhenFlagIsTrue()
     {
         // Arrange
         var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
@@ -39,27 +40,43 @@ public class ProductServiceTests
         await db.ProductCategory.AddAsync(category);
         await db.SaveChangesAsync();
 
-        var products = new[]
+        var products = new List<Product>
         {
-            new Product(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id),
-            new Product(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id)
+            new(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id),
+            new(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id)
         };
         await db.Product.AddRangeAsync(products);
         await db.SaveChangesAsync();
 
-        var request = new ProductListRequest([], Search: products[0].Name, Page: new PageRequest(1, 10))
-        {
-            Search = products[0].Name, // Поиск по названию первого продукта
-            Page = new PageRequest(1, 10)
-        };
+        var user = FakeDataService.GetGenerationUser();
+        await db.User.AddAsync(user);
+        await db.SaveChangesAsync();
+
+        var request = new ProductListRequest(
+            CategoryParametersValuesIds: new List<int>(),
+            Search: products[0].Name,  // Поиск по названию первого продукта
+            Page: new PageRequest(1, 10),
+            SaveFilter: true,          // Флаг сохранения фильтра
+            FilterName: "TestFilter",  // Имя фильтра
+            UserId: user.Id            // Пользователь, для которого сохраняем фильтр
+        );
 
         // Act
         var result = await _productService.GetList(request);
 
         // Assert
+        // Проверка, что продукт был возвращен корректно
         Assert.Single(result.Items);
         Assert.Equal(products[0].Name, result.Items[0].Name);
+
+        // Проверка, что фильтр был сохранен в базу
+        var savedFilter = await db.UserSaveFilter.FirstOrDefaultAsync(usf => usf.UserId == user.Id && usf.FilterName == "TestFilter");
+
+        Assert.NotNull(savedFilter);
+        Assert.Equal(request.FilterName, savedFilter.FilterName);
+        Assert.Equal(JsonConvert.SerializeObject(request), savedFilter.FilterValueJson);
     }
+
 
     /// <summary>
     /// Тест для метода GetDetail, проверяющий возвращение детальной информации по продукту.
