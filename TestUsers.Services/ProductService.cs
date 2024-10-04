@@ -56,7 +56,17 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
             .ToList();
 
         if (request.SaveFilter && !string.IsNullOrWhiteSpace(request.FilterName) && request.UserId.HasValue)
-            await userSaveFilterService.SaveFilter(new UserSaveFilterRequest<ProductListRequest>(request.UserId.Value, request.FilterName, request), cancellationToken);
+            await userSaveFilterService.SaveFilter(
+                new UserSaveFilterRequest(
+                    request.UserId.Value,
+                    request.FilterName,
+                    request.CategoryParametersValuesIds,
+                    request.CategoryId,
+                    request.Search,
+                    request.FromAmount,
+                    request.ToAmount),
+                cancellationToken);
+
         return new ProductListResponse(productsItems, new PageResponse(countProducts, request.Page?.Page ?? 0, request.Page?.PageSize ?? 0));
     }
 

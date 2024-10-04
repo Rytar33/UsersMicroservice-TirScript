@@ -27,6 +27,11 @@ public sealed class DataContext : DbContext
     public DbSet<UserSaveFilter> UserSaveFilter { get; set; }
 
     /// <summary>
+    /// Таблица "Отношение MtoM сохранение фильтра пользователя и значения параметров категории товаров"
+    /// </summary>
+    public DbSet<UserSaveFilterRelation> UserSaveFilterRelation { get; set; }
+
+    /// <summary>
     /// Таблица "Язык"
     /// </summary>
     public DbSet<Language> Language { get; set; }
@@ -87,6 +92,7 @@ public sealed class DataContext : DbContext
         modelBuilder.ApplyConfiguration(new UserContactConfiguration());
         modelBuilder.ApplyConfiguration(new UserLanguageConfiguration());
         modelBuilder.ApplyConfiguration(new UserSaveFilterConfiguration());
+        modelBuilder.ApplyConfiguration(new UserSaveFilterRelationConfiguration());
         modelBuilder.ApplyConfiguration(new LanguageConfiguration());
         modelBuilder.ApplyConfiguration(new NewsConfiguration());
         modelBuilder.ApplyConfiguration(new NewsTagConfiguration());

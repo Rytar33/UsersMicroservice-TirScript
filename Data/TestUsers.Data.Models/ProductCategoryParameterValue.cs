@@ -31,4 +31,9 @@ public class ProductCategoryParameterValue : BaseEntity
     /// Выбранные значения для товара
     /// </summary>
     public List<ProductCategoryParameterValueProduct> ProductCategoryParameterValueProduct { get; set; } = [];
+
+    /// <summary>
+    /// Пользователи сохранившие идентификатор значения параметра
+    /// </summary>
+    public List<UserSaveFilterRelation> UserSaveFilter { get; set; } = [];
 }

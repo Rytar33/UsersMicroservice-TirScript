@@ -74,7 +74,7 @@ public class ProductServiceTests
 
         Assert.NotNull(savedFilter);
         Assert.Equal(request.FilterName, savedFilter.FilterName);
-        Assert.Equal(JsonConvert.SerializeObject(request), savedFilter.FilterValueJson);
+        Assert.Equal(request.Search, savedFilter.Search);
     }
 
 

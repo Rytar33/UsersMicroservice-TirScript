@@ -42,4 +42,9 @@ public class ProductCategory : BaseEntity
     /// Параметры категории
     /// </summary>
     public List<ProductCategoryParameter> Parameters { get; set; } = [];
+
+    /// <summary>
+    /// Пользователи сохранившие идентификатор категории
+    /// </summary>
+    public List<UserSaveFilter> UserSaveFilters { get; set; } = [];
 }

@@ -1,31 +1,26 @@
 ﻿using FluentValidation;
 using TestUsers.Data.Models;
-using TestUsers.Services.Dtos.Products;
 using TestUsers.Services.Dtos.UserSaveFilters;
 using TestUsers.Services.Exceptions;
 
-namespace TestUsers.Services.Dtos.Validators.Products;
+namespace TestUsers.Services.Dtos.Validators.UserSaveFilters;
 
-public class ProductListRequestValidator : AbstractValidator<ProductListRequest>
+public class UserSaveFilterRequestValidator : AbstractValidator<UserSaveFilterRequest>
 {
-    public ProductListRequestValidator()
+    public UserSaveFilterRequestValidator()
     {
         RuleFor(p => p.UserId)
-            .Must(p => !p.HasValue || p > 0).WithMessage(string.Format(
+            .GreaterThan(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
-                nameof(ProductListRequest.UserId),
+                nameof(UserSaveFilterRequest.UserId),
                 "1"));
 
-        RuleFor(p => p.FilterName)
+        RuleFor(p => p.SaveFilterName)
             .MaximumLength(100)
             .WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
-                nameof(ProductListRequest.FilterName),
+                nameof(UserSaveFilterRequest.SaveFilterName),
                 "100"));
-
-        RuleFor(p => p)
-            .Must(p => !p.SaveFilter || (!string.IsNullOrWhiteSpace(p.FilterName) && p.UserId.HasValue))
-            .WithMessage(string.Format(ErrorMessages.SaveRequestError, nameof(ProductListRequest.SaveFilter)));
 
         RuleForEach(p => p.CategoryParametersValuesIds)
             .GreaterThan(0).WithMessage(string.Format(
@@ -44,53 +39,39 @@ public class ProductListRequestValidator : AbstractValidator<ProductListRequest>
             .Must(p => string.IsNullOrWhiteSpace(p) || p.Length <= 200)
             .WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
-                nameof(ProductListRequest.Search),
+                nameof(UserSaveFilterRequest.Search),
                 "200"));
 
         RuleFor(p => p.CategoryId)
             .Must(p => !p.HasValue || p <= 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
-                nameof(ProductListRequest.CategoryId),
+                nameof(UserSaveFilterRequest.CategoryId),
                 "1"));
 
         RuleForEach(p => p.CategoryParametersValuesIds)
             .GreaterThan(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
-                nameof(ProductListRequest.CategoryParametersValuesIds),
+                nameof(UserSaveFilterRequest.CategoryParametersValuesIds),
                 "1"));
 
         RuleFor(p => p.FromAmount)
             .Must(p => !p.HasValue || p.Value < 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
-                nameof(ProductListRequest.FromAmount),
+                nameof(UserSaveFilterRequest.FromAmount),
                 "0"));
 
         RuleFor(p => p.ToAmount)
             .Must(p => !p.HasValue || p.Value < 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
-                nameof(ProductListRequest.FromAmount),
+                nameof(UserSaveFilterRequest.FromAmount),
                 "0"));
 
         RuleFor(p => p)
             .Must(p => (!p.FromAmount.HasValue || !p.ToAmount.HasValue)
                        || p.FromAmount.Value <= p.ToAmount.Value)
             .WithMessage(ErrorMessages.RegexError);
-
-        RuleFor(p => p.Page)
-            .Must(p => p == null || p.Page <= 0)
-            .WithMessage(string.Format(
-                ErrorMessages.LessThanError,
-                nameof(ProductListRequest.Page.Page),
-                "1"));
-
-        RuleFor(p => p.Page)
-            .Must(p => p == null || p.PageSize <= 0)
-            .WithMessage(string.Format(
-                ErrorMessages.LessThanError,
-                nameof(ProductListRequest.Page.PageSize),
-                "1"));
     }
 }

@@ -20,5 +20,9 @@ public class ProductCategoryParameterValueConfiguration : IEntityTypeConfigurati
         builder.HasOne(p => p.ProductCategoryParameter)
             .WithMany(p => p.Values)
             .HasForeignKey(p => p.ProductCategoryParameterId);
+
+        builder.HasMany(p => p.UserSaveFilter)
+            .WithOne(p => p.ProductCategoryParameterValue)
+            .HasForeignKey(p => p.ProductCategoryParameterValueId);
     }
 }

@@ -3,11 +3,32 @@ using TestUsers.Services.Dtos;
 
 namespace TestUsers.Services.Interfaces.Services;
 
+/// <summary>
+/// Интерфейс сервиса сохранение фильтра пользователя
+/// </summary>
 public interface IUserSaveFilterService
 {
-    Task<List<UserSaveFilterListItem<TJsonFilter>>> GetList<TJsonFilter>(int userId, CancellationToken cancellationToken = default) where TJsonFilter : class;
+    /// <summary>
+    /// Получение списка сохранений пользователя
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<List<UserSaveFilterListItem>> GetList(int userId, CancellationToken cancellationToken = default);
 
-    Task<BaseResponse> SaveFilter<TJsonFilter>(UserSaveFilterRequest<TJsonFilter> request, CancellationToken cancellationToken = default) where TJsonFilter : class;
+    /// <summary>
+    /// Сохранение фильтра пользователя
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResponse> SaveFilter(UserSaveFilterRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Удаление фильтра пользователя
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default);
 }

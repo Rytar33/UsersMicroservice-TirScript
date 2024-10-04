@@ -13,12 +13,21 @@ public class UserSaveFilterConfiguration : IEntityTypeConfiguration<UserSaveFilt
         builder.Property(p => p.FilterName)
             .HasMaxLength(100);
 
-        builder.Property(p => p.FilterValueJson);
+        builder.Property(p => p.Search)
+            .HasMaxLength(200);
+
+        builder.Property(p => p.FromAmount);
+
+        builder.Property(p => p.ToAmount);
 
         builder.Property(p => p.DateCreated);
 
         builder.HasOne(p => p.User)
             .WithMany(p => p.SaveFilters)
             .HasForeignKey(p => p.UserId);
+
+        builder.HasOne(p => p.ProductCategory)
+            .WithMany(p => p.UserSaveFilters)
+            .HasForeignKey(p => p.CategoryId);
     }
 }

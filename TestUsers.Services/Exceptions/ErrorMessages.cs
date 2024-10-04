@@ -21,4 +21,6 @@ public static class ErrorMessages
     public static string GreaterThanError = "{0} не должно быть больше {1}";
 
     public static string JsonDeserializeError = "Не удалось преобразовать json строку в объект {0}";
+
+    public static string SaveRequestError = "Не удалось сохранить {0}, возможно вы не правильно указали параметры";
 }
