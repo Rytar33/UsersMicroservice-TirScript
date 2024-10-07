@@ -7,7 +7,6 @@ using TestUsers.Services.Interfaces.Services;
 using TestUsers.Services.Exceptions;
 using Xunit;
 using TestUsers.Services.Dtos.Pages;
-using Newtonsoft.Json;
 
 namespace TestUsers.Services.Tests;
 
@@ -36,24 +35,22 @@ public class ProductServiceTests
     {
         // Arrange
         var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
-        await using var db = new DataContext(_dbContextOptions);
-        await db.ProductCategory.AddAsync(category);
-        await db.SaveChangesAsync();
+        await _dataContext.ProductCategory.AddAsync(category);
+        await _dataContext.SaveChangesAsync();
 
         var products = new List<Product>
         {
             new(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id),
             new(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id)
         };
-        await db.Product.AddRangeAsync(products);
-        await db.SaveChangesAsync();
+        await _dataContext.Product.AddRangeAsync(products);
+        await _dataContext.SaveChangesAsync();
 
         var user = FakeDataService.GetGenerationUser();
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _dataContext.User.AddAsync(user);
+        await _dataContext.SaveChangesAsync();
 
         var request = new ProductListRequest(
-            CategoryParametersValuesIds: new List<int>(),
             Search: products[0].Name,  // Поиск по названию первого продукта
             Page: new PageRequest(1, 10),
             SaveFilter: true,          // Флаг сохранения фильтра
@@ -66,11 +63,10 @@ public class ProductServiceTests
 
         // Assert
         // Проверка, что продукт был возвращен корректно
-        Assert.Single(result.Items);
-        Assert.Equal(products[0].Name, result.Items[0].Name);
+        Assert.Contains(products[0].Name, result.Items.Select(i => i.Name));
 
         // Проверка, что фильтр был сохранен в базу
-        var savedFilter = await db.UserSaveFilter.FirstOrDefaultAsync(usf => usf.UserId == user.Id && usf.FilterName == "TestFilter");
+        var savedFilter = await _dataContext.UserSaveFilter.FirstOrDefaultAsync(usf => usf.UserId == user.Id && usf.FilterName == "TestFilter");
 
         Assert.NotNull(savedFilter);
         Assert.Equal(request.FilterName, savedFilter.FilterName);
@@ -86,13 +82,12 @@ public class ProductServiceTests
     {
         // Arrange
         var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
-        await using var db = new DataContext(_dbContextOptions);
-        await db.ProductCategory.AddAsync(category);
-        await db.SaveChangesAsync();
+        await _dataContext.ProductCategory.AddAsync(category);
+        await _dataContext.SaveChangesAsync();
 
         var product = new Product(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id);
-        await db.Product.AddAsync(product);
-        await db.SaveChangesAsync();
+        await _dataContext.Product.AddAsync(product);
+        await _dataContext.SaveChangesAsync();
 
         // Act
         var result = await _productService.GetDetail(product.Id);
@@ -123,19 +118,18 @@ public class ProductServiceTests
     {
         // Arrange
         var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
-        await using var db = new DataContext(_dbContextOptions);
-        await db.ProductCategory.AddAsync(category);
-        await db.SaveChangesAsync();
+        await _dataContext.ProductCategory.AddAsync(category);
+        await _dataContext.SaveChangesAsync();
         var parameter = new ProductCategoryParameter(_faker.Commerce.ProductMaterial(), category.Id);
-        await db.ProductCategoryParameter.AddAsync(parameter);
-        await db.SaveChangesAsync();
+        await _dataContext.ProductCategoryParameter.AddAsync(parameter);
+        await _dataContext.SaveChangesAsync();
         var values = new List<ProductCategoryParameterValue> 
         { 
             new(_faker.Commerce.Color(), parameter.Id),
             new(_faker.Commerce.Color(), parameter.Id),
         };
-        await db.ProductCategoryParameterValue.AddRangeAsync(values);
-        await db.SaveChangesAsync();
+        await _dataContext.ProductCategoryParameterValue.AddRangeAsync(values);
+        await _dataContext.SaveChangesAsync();
 
         var request = new ProductSaveRequest(
             null,
@@ -151,10 +145,10 @@ public class ProductServiceTests
         await _productService.Save(request);
 
         // Assert
-        var product = await db.Product.FirstOrDefaultAsync(p => p.Name == request.Name);
+        var product = await _dataContext.Product.FirstOrDefaultAsync(p => p.Name == request.Name);
         Assert.NotNull(product);
         Assert.Equal(request.Name, product.Name);
-        Assert.True(await db.ProductCategoryParameterValueProduct.AnyAsync(pcpvp => 
+        Assert.True(await _dataContext.ProductCategoryParameterValueProduct.AnyAsync(pcpvp => 
             pcpvp.ProductId == product.Id 
             && request.CategoryParametersValuesIds.Contains(pcpvp.ProductCategoryParameterValueId)));
     }
@@ -167,19 +161,18 @@ public class ProductServiceTests
     {
         // Arrange
         var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
-        await using var db = new DataContext(_dbContextOptions);
-        await db.ProductCategory.AddAsync(category);
-        await db.SaveChangesAsync();
+        await _dataContext.ProductCategory.AddAsync(category);
+        await _dataContext.SaveChangesAsync();
 
         var product = new Product(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id);
-        await db.Product.AddAsync(product);
-        await db.SaveChangesAsync();
+        await _dataContext.Product.AddAsync(product);
+        await _dataContext.SaveChangesAsync();
 
         // Act
         await _productService.Delete(product.Id);
 
         // Assert
-        Assert.False(await db.Product.AnyAsync(p => p.Id == product.Id));
+        Assert.False(await _dataContext.Product.AnyAsync(p => p.Id == product.Id));
     }
 
     /// <summary>

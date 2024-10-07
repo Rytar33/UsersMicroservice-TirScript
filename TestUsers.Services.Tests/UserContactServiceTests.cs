@@ -36,12 +36,11 @@ public class UserContactServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _dataContext.User.AddAsync(user);
+        await _dataContext.SaveChangesAsync();
         var contact = new UserContact(_faker.Lorem.Word(), _faker.Phone.PhoneNumber(), user.Id);
-        await db.UserContact.AddAsync(contact);
-        await db.SaveChangesAsync();
+        await _dataContext.UserContact.AddAsync(contact);
+        await _dataContext.SaveChangesAsync();
 
         // Act
         var result = await _userContactService.GetContacts(user.Id);
@@ -58,7 +57,7 @@ public class UserContactServiceTests
     public async Task GetContacts_ShouldThrowException_WhenUserNotFound()
     {
         // Arrange
-        var userId = _faker.Random.Int(1, 100);
+        var userId = 100;
         
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() => _userContactService.GetContacts(userId));
@@ -72,17 +71,16 @@ public class UserContactServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _dataContext.User.AddAsync(user);
+        await _dataContext.SaveChangesAsync();
         var contacts = new List<UserContact>()
         {
             new(_faker.Lorem.Word(), _faker.Phone.PhoneNumber(), user.Id),
             new(_faker.Lorem.Word(), _faker.Internet.Url(), user.Id),
             new(_faker.Lorem.Word(), _faker.Internet.Url(), user.Id)
         };
-        await db.UserContact.AddRangeAsync(contacts);
-        await db.SaveChangesAsync();
+        await _dataContext.UserContact.AddRangeAsync(contacts);
+        await _dataContext.SaveChangesAsync();
 
         var request = new UserContactsSaveRequest(
             user.Id, 
@@ -96,7 +94,7 @@ public class UserContactServiceTests
         await _userContactService.SaveContacts(request);
 
         // Assert
-        Assert.False(await db.UserContact.AnyAsync(uc => uc.Id == contacts[2].Id));
-        Assert.True(await db.UserContact.AnyAsync(uc => uc.Name == request.Contacts[0].Name));
+        Assert.False(await _dataContext.UserContact.AnyAsync(uc => uc.Id == contacts[2].Id));
+        Assert.True(await _dataContext.UserContact.AnyAsync(uc => uc.Name == request.Contacts[0].Name));
     }
 }

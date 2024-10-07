@@ -9,7 +9,7 @@ public class ProductSaveRequestValidator : AbstractValidator<ProductSaveRequest>
     public ProductSaveRequestValidator()
     {
         RuleFor(p => p.Id)
-            .Must(p => !p.HasValue || p <= 0)
+            .Must(p => !p.HasValue || p > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductSaveRequest.Id),

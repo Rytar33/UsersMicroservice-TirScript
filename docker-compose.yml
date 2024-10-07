@@ -1,0 +1,30 @@
+﻿networks:
+  testusers.webapi:
+    driver: bridge
+services:
+  app:
+    container_name: testusers
+    build:
+      context: .
+      dockerfile: TestUsers.WebApi/Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - testusers.webapi
+    depends_on:
+      - sqlserver_db
+  sqlserver_db:
+    container_name: sqlserver
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "Passw0rd"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    networks:
+      - testusers.webapi
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+volumes:
+  sqlserver-data:

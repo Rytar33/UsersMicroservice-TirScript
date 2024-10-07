@@ -22,14 +22,15 @@ public class UserSaveFilterRequestValidator : AbstractValidator<UserSaveFilterRe
                 nameof(UserSaveFilterRequest.SaveFilterName),
                 "100"));
 
-        RuleForEach(p => p.CategoryParametersValuesIds)
-            .GreaterThan(0).WithMessage(string.Format(
+        RuleFor(p => p.CategoryParametersValuesIds)
+            .Must(ps => ps == null || ps.All(p => p > 0))
+            .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.UserId),
                 "1"));
 
         RuleFor(p => p.CategoryParametersValuesIds)
-            .Must(p => !p.GroupBy(v => v).Any(v => v.Count() > 1))
+            .Must(p => p == null || !p.GroupBy(v => v).Any(v => v.Count() > 1))
             .WithMessage(string.Format(
                 ErrorMessages.CoincideError,
                 nameof(UserSaveFilterRequest.CategoryParametersValuesIds),
@@ -43,7 +44,7 @@ public class UserSaveFilterRequestValidator : AbstractValidator<UserSaveFilterRe
                 "200"));
 
         RuleFor(p => p.CategoryId)
-            .Must(p => !p.HasValue || p <= 0)
+            .Must(p => !p.HasValue || p > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.CategoryId),
@@ -56,14 +57,14 @@ public class UserSaveFilterRequestValidator : AbstractValidator<UserSaveFilterRe
                 "1"));
 
         RuleFor(p => p.FromAmount)
-            .Must(p => !p.HasValue || p.Value < 0)
+            .Must(p => !p.HasValue || p.Value > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.FromAmount),
                 "0"));
 
         RuleFor(p => p.ToAmount)
-            .Must(p => !p.HasValue || p.Value < 0)
+            .Must(p => !p.HasValue || p.Value > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.FromAmount),

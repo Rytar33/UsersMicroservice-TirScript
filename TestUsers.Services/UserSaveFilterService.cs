@@ -56,23 +56,26 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
             userSaveFilter.FromAmount = request.FromAmount;
             userSaveFilter.ToAmount = request.ToAmount;
 
-            var valuesRelationOnDelete = await db.UserSaveFilterRelation
+            if (request.CategoryParametersValuesIds != null)
+            {
+                var valuesRelationOnDelete = await db.UserSaveFilterRelation
                 .Where(usfr => !request.CategoryParametersValuesIds.Contains(usfr.ProductCategoryParameterValueId))
                 .ToListAsync(cancellationToken);
 
-            if (valuesRelationOnDelete.Count > 0)
-                db.UserSaveFilterRelation.RemoveRange(valuesRelationOnDelete);
+                if (valuesRelationOnDelete.Count > 0)
+                    db.UserSaveFilterRelation.RemoveRange(valuesRelationOnDelete);
 
-            var valuesRelationOnCreate = request.CategoryParametersValuesIds
-                .Distinct()
-                .Where(i => !db.UserSaveFilterRelation.Any(usfr => 
-                    usfr.ProductCategoryParameterValueId == i 
-                    && usfr.UserSaveFilterId == userSaveFilter.Id))
-                .Select(i => new UserSaveFilterRelation(i, userSaveFilter.Id))
-                .ToList();
+                var valuesRelationOnCreate = request.CategoryParametersValuesIds
+                    .Distinct()
+                    .Where(i => !db.UserSaveFilterRelation.Any(usfr =>
+                        usfr.ProductCategoryParameterValueId == i
+                        && usfr.UserSaveFilterId == userSaveFilter.Id))
+                    .Select(i => new UserSaveFilterRelation(i, userSaveFilter.Id))
+                    .ToList();
 
-            if (valuesRelationOnCreate.Count > 0)
-                await db.UserSaveFilterRelation.AddRangeAsync(valuesRelationOnCreate, cancellationToken);
+                if (valuesRelationOnCreate.Count > 0)
+                    await db.UserSaveFilterRelation.AddRangeAsync(valuesRelationOnCreate, cancellationToken);
+            }
         }
         else // On update
         {
@@ -89,12 +92,15 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
 
             await db.SaveChangesAsync(cancellationToken);
 
-            var userSaveFilterRelations = request.CategoryParametersValuesIds
+            if (request.CategoryParametersValuesIds != null)
+            {
+                var userSaveFilterRelations = request.CategoryParametersValuesIds
                 .Select(i => new UserSaveFilterRelation(i, userSaveFilter.Id))
                 .ToList();
 
-            if (userSaveFilterRelations.Count > 0)
-                await db.UserSaveFilterRelation.AddRangeAsync(userSaveFilterRelations, cancellationToken);
+                if (userSaveFilterRelations.Count > 0)
+                    await db.UserSaveFilterRelation.AddRangeAsync(userSaveFilterRelations, cancellationToken);
+            }
         }
         await db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
@@ -102,9 +108,19 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
 
     public async Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var rowsRemoved = await db.UserSaveFilter.Where(usf => usf.Id == id).ExecuteDeleteAsync(cancellationToken);
-        if (rowsRemoved == 0)
-            throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(UserSaveFilter)));
+        if (!db.Database.IsInMemory())
+        {
+            var rowsRemoved = await db.UserSaveFilter.Where(u => u.Id == id).ExecuteDeleteAsync(cancellationToken);
+            if (rowsRemoved == 0)
+                throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
+        }
+        else
+        {
+            var userSaveFilter = await db.User.FindAsync([id], cancellationToken)
+                ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
+            db.User.Remove(userSaveFilter);
+            await db.SaveChangesAsync(cancellationToken);
+        }
         return new BaseResponse();
     }
 }

@@ -71,9 +71,19 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
 
     public async Task<BaseResponse> Delete(int userId, CancellationToken cancellationToken = default)
     {
-        var rowsRemoved = await db.User.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);
-        if (rowsRemoved == 0)
-            throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
+        if (!db.Database.IsInMemory())
+        {
+            var rowsRemoved = await db.User.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);
+            if (rowsRemoved == 0)
+                throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
+        }
+        else
+        {
+            var user = await db.User.FindAsync([ userId ], cancellationToken) 
+                ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
+            db.User.Remove(user);
+            await db.SaveChangesAsync(cancellationToken);
+        }
         return new BaseResponse();
     }
 
@@ -85,7 +95,7 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
         if (request.RequestCode == null)
         {
-            user.RecoveryToken = user.RecoveryToken!.GetGenerateToken();
+            user.RecoveryToken = string.Empty.GetGenerateToken();
             await db.SaveChangesAsync(cancellationToken);
             if (!db.Database.IsInMemory())
                 await emailService.SendEmailAsync(user.Email, cancellationToken);

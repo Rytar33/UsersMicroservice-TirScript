@@ -4,7 +4,7 @@ using TestUsers.Data.Models;
 
 namespace TestUsers.Data;
 
-public sealed class DataContext : DbContext
+public sealed class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
 {
     /// <summary>
     /// Таблица "Пользователь"
@@ -75,16 +75,6 @@ public sealed class DataContext : DbContext
     /// Таблица "Выбранные значение параметра для товара"
     /// </summary>
     public DbSet<ProductCategoryParameterValueProduct> ProductCategoryParameterValueProduct { get; set; }
-
-    public DataContext() {}
-
-    public DataContext(DbContextOptions<DataContext> options) : base(options) {}
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-            optionsBuilder.UseSqlServer("Server=.;Database=Pages;Trusted_Connection=True;TrustServerCertificate=True");
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

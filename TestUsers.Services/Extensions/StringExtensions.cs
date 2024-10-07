@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace TestUsers.Services.Extensions;
@@ -26,9 +27,12 @@ public static class StringExtensions
     public static string GetGenerateToken(this string token, int sizeToken = 6)
     {
         var stringBuilder = new StringBuilder(token).Clear();
+        var random = new Random();
+        const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
         while (sizeToken > 0)
         {
-            stringBuilder.Append(new Random().Next(0x0030, 0x007A)); // Генерация от 0 до 9 и A-Z, a-z
+            stringBuilder.Append(chars[random.Next(chars.Length)]);
             sizeToken--;
         }
         return stringBuilder.ToString();

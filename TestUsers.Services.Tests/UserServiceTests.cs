@@ -7,10 +7,11 @@ using TestUsers.Services.Dtos.Users.Recoveries;
 using Microsoft.EntityFrameworkCore;
 using TestUsers.Data;
 using TestUsers.Services.Extensions;
-using Microsoft.Extensions.Options;
-using TestUsers.Services.Options;
 using TestUsers.Services.Interfaces.Services;
 using Bogus;
+using TestUsers.WebApi.Options;
+
+
 
 namespace TestUsers.Services.Tests;
 
@@ -24,6 +25,8 @@ public class UserServiceTests
     private readonly IEmailService _emailService;
     private readonly DbContextOptions<DataContext> _dbContextOptions;
     private readonly Faker _faker;
+    private readonly DataContext _context;
+
     public UserServiceTests()
     {
         // Инициализация данных для тестов
@@ -31,18 +34,11 @@ public class UserServiceTests
         _dbContextOptions = new DbContextOptionsBuilder<DataContext>()
             .UseInMemoryDatabase(databaseName: nameof(UserServiceTests))
             .Options;
-        var dataContext = new DataContext(_dbContextOptions);
-        dataContext.Database.EnsureCreated();
+        _context = new DataContext(_dbContextOptions);
         // Настройка мока IEmailOptions с тестовыми данными
-        var emailOptions = new EmailOptions(
-            "TestCompany",
-            "test@company.com",
-            "testpassword",
-            "smtp.mail.ru",
-            "587",
-            "localhost");
-        _emailService = new EmailService((IOptions<EmailOptions>)emailOptions, dataContext);
-        _userService = new UserService(_emailService, dataContext);
+        var emailOptions = new EmailOptions();
+        _emailService = new EmailService(emailOptions, _context);
+        _userService = new UserService(_emailService, _context);
     }
 
     /// <summary>
@@ -53,9 +49,6 @@ public class UserServiceTests
     public async Task GetList_ShouldReturnCorrectData()
     {
         // Arrange
-        await using var context = new DataContext(_dbContextOptions);
-        await context.Database.EnsureCreatedAsync();
-
         var users = new List<User>
         {
             FakeDataService.GetGenerationUser(),
@@ -64,8 +57,8 @@ public class UserServiceTests
 
         var request = new UsersListRequest(users[1].FullName, null, new PageRequest());
 
-        await context.User.AddRangeAsync(users);
-        await context.SaveChangesAsync();
+        await _context.User.AddRangeAsync(users);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _userService.GetList(request);
@@ -84,9 +77,8 @@ public class UserServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var context = new DataContext(_dbContextOptions);
-        await context.User.AddAsync(user);
-        await context.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _userService.GetDetail(user.Id);
@@ -103,7 +95,7 @@ public class UserServiceTests
     public async Task GetDetail_UserDoesNotExist_ShouldThrowNotFoundException()
     {
         // Arrange
-        var userId = 1;
+        var userId = 10;
 
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() => _userService.GetDetail(userId));
@@ -118,13 +110,12 @@ public class UserServiceTests
     {
         // Arrange
         var request = new UserCreateRequest(_faker.Internet.Email(), _faker.Person.FullName, _faker.Internet.Password());
-        await using var db = new DataContext(_dbContextOptions);
 
         // Act
         await _userService.Create(request);
 
         // Assert
-        Assert.True(await db.User.AnyAsync(u => u.Email == request.Email));
+        Assert.True(await _context.User.AnyAsync(u => u.Email == request.Email));
     }
 
     /// <summary>
@@ -136,9 +127,8 @@ public class UserServiceTests
     {
         // Arrange
         var existingUser = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(existingUser);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(existingUser);
+        await _context.SaveChangesAsync();
 
         var request = new UserEditRequest(existingUser.Id, _faker.Name.FullName());
 
@@ -146,7 +136,7 @@ public class UserServiceTests
         await _userService.Edit(request);
 
         // Assert
-        Assert.True(await db.User.AnyAsync(u => u.FullName == request.FullName));
+        Assert.True(await _context.User.AnyAsync(u => u.FullName == request.FullName));
     }
 
     /// <summary>
@@ -172,15 +162,14 @@ public class UserServiceTests
     {
         // Arrange
         var existingUser = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(existingUser);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(existingUser);
+        await _context.SaveChangesAsync();
 
         // Act
         await _userService.Delete(existingUser.Id);
 
         // Assert
-        Assert.False(await db.User.AnyAsync(u => existingUser.Id == u.Id));
+        Assert.False(await _context.User.AnyAsync(u => existingUser.Id == u.Id));
     }
 
     /// <summary>
@@ -191,7 +180,7 @@ public class UserServiceTests
     public async Task Delete_UserDoesNotExist_ShouldThrowNotFoundException()
     {
         // Arrange
-        var userId = 1;
+        var userId = 10;
 
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() => _userService.Delete(userId));
@@ -206,16 +195,17 @@ public class UserServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var context = new DataContext(_dbContextOptions);
-        await context.User.AddAsync(user);
-        await context.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
         var request = new RecoveryStartRequest(user.Email, null);
 
         // Act
         await _userService.RecoveryStart(request);
 
         // Assert
-        Assert.NotNull(user.RecoveryToken); // Токен должен быть сгенерирован
+
+        var userFound = await _context.User.FindAsync(user.Id);
+        Assert.NotNull(userFound?.RecoveryToken); // Токен должен быть сгенерирован
     }
 
     /// <summary>
@@ -242,9 +232,8 @@ public class UserServiceTests
         // Arrange
         var user = FakeDataService.GetGenerationUser();
         user.RecoveryToken = string.Empty.GetGenerateToken();
-        await using var context = new DataContext(_dbContextOptions);
-        await context.User.AddAsync(user);
-        await context.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
         var newPassword = _faker.Internet.Password();
         var request = new RecoveryEndRequest(user.Email, user.RecoveryToken, newPassword, newPassword);
 
@@ -266,13 +255,12 @@ public class UserServiceTests
         // Arrange
         var user = FakeDataService.GetGenerationUser();
         user.RecoveryToken = string.Empty.GetGenerateToken();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
 
         var request = new RecoveryEndRequest(user.Email, string.Empty.GetGenerateToken(), _faker.Internet.Password(), _faker.Internet.Password());
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => _userService.RecoveryEnd(request));
+        await Assert.ThrowsAsync<FluentValidation.ValidationException>(() => _userService.RecoveryEnd(request));
     }
 }

@@ -1,8 +1,11 @@
-﻿namespace TestUsers.Data.Enums;
+﻿using System.Text.Json.Serialization;
+
+namespace TestUsers.Data.Enums;
 
 /// <summary>
 /// Статус пользователя
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter<EnumUserStatus>))]
 public enum EnumUserStatus
 {
     /// <summary>

@@ -27,14 +27,15 @@ public class ProductListRequestValidator : AbstractValidator<ProductListRequest>
             .Must(p => !p.SaveFilter || (!string.IsNullOrWhiteSpace(p.FilterName) && p.UserId.HasValue))
             .WithMessage(string.Format(ErrorMessages.SaveRequestError, nameof(ProductListRequest.SaveFilter)));
 
-        RuleForEach(p => p.CategoryParametersValuesIds)
-            .GreaterThan(0).WithMessage(string.Format(
+        RuleFor(p => p.CategoryParametersValuesIds)
+            .Must(ps => ps == null || ps.All(p => p > 0))
+            .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.UserId),
                 "1"));
 
         RuleFor(p => p.CategoryParametersValuesIds)
-            .Must(p => !p.GroupBy(v => v).Any(v => v.Count() > 1))
+            .Must(p => p == null || !p.GroupBy(v => v).Any(v => v.Count() > 1))
             .WithMessage(string.Format(
                 ErrorMessages.CoincideError,
                 nameof(UserSaveFilterRequest.CategoryParametersValuesIds),
@@ -48,7 +49,7 @@ public class ProductListRequestValidator : AbstractValidator<ProductListRequest>
                 "200"));
 
         RuleFor(p => p.CategoryId)
-            .Must(p => !p.HasValue || p <= 0)
+            .Must(p => !p.HasValue || p > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductListRequest.CategoryId),
@@ -61,14 +62,14 @@ public class ProductListRequestValidator : AbstractValidator<ProductListRequest>
                 "1"));
 
         RuleFor(p => p.FromAmount)
-            .Must(p => !p.HasValue || p.Value < 0)
+            .Must(p => !p.HasValue || p.Value > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductListRequest.FromAmount),
                 "0"));
 
         RuleFor(p => p.ToAmount)
-            .Must(p => !p.HasValue || p.Value < 0)
+            .Must(p => !p.HasValue || p.Value > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductListRequest.FromAmount),
@@ -80,14 +81,14 @@ public class ProductListRequestValidator : AbstractValidator<ProductListRequest>
             .WithMessage(ErrorMessages.RegexError);
 
         RuleFor(p => p.Page)
-            .Must(p => p == null || p.Page <= 0)
+            .Must(p => p == null || p.Page > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductListRequest.Page.Page),
                 "1"));
 
         RuleFor(p => p.Page)
-            .Must(p => p == null || p.PageSize <= 0)
+            .Must(p => p == null || p.PageSize > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductListRequest.Page.PageSize),

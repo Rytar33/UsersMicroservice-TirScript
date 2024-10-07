@@ -47,10 +47,14 @@ public class ProductCategoryService(DataContext db) : IProductCategoryService
         // Строим дерево категорий
         foreach (var category in productCategories)
             if (category.ParentCategoryId.HasValue) // Добавляем категорию как дочернюю к родительской категории
+            {
                 if (categoryDict.TryGetValue(category.ParentCategoryId.Value, out var parentCategory))
                     parentCategory.ChildCategories.Add(categoryDict[category.Id]);
+            }
             else
+            {
                 rootCategories.Add(categoryDict[category.Id]); // Если нет родительской категории, добавляем в корневые категории
+            }
 
         return rootCategories;
     }
@@ -84,9 +88,19 @@ public class ProductCategoryService(DataContext db) : IProductCategoryService
 
     public async Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var rowsRemoved = await db.ProductCategory.Where(pc => pc.Id == id).ExecuteDeleteAsync(cancellationToken);
-        if (rowsRemoved == 0)
-            throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
+        if (!db.Database.IsInMemory())
+        {
+            var rowsRemoved = await db.ProductCategory.Where(pc => pc.Id == id).ExecuteDeleteAsync(cancellationToken);
+            if (rowsRemoved == 0)
+                throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
+        }
+        else
+        {
+            var category = await db.ProductCategory.FindAsync([id], cancellationToken)
+                ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
+            db.ProductCategory.Remove(category);
+            await db.SaveChangesAsync(cancellationToken);
+        }
         return new BaseResponse();
     }
 }

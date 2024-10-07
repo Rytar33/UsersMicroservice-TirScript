@@ -37,25 +37,24 @@ public class UserLanguageServiceTests
         // Arrange
         var user = FakeDataService.GetGenerationUser();
         var languages = new List<Language> { new("en", "English"), new("ro", "Romanian") };
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.Language.AddRangeAsync(languages);
-        await db.SaveChangesAsync();
+        await _dbContext.User.AddAsync(user);
+        await _dbContext.Language.AddRangeAsync(languages);
+        await _dbContext.SaveChangesAsync();
         var userLanguages = new List<UserLanguage>
         {
             new(DateTime.UtcNow, user.Id, languages[0].Id),
             new(DateTime.UtcNow, user.Id, languages[1].Id)
         };
-        await db.UserLanguage.AddRangeAsync(userLanguages);
-        await db.SaveChangesAsync();
+        await _dbContext.UserLanguage.AddRangeAsync(userLanguages);
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var result = await _userLanguageService.GetList(user.Id);
 
         // Assert
         Assert.Equal(result.Count, userLanguages.Count);
-        Assert.Equal(languages[0].Name, result[0].Name);
-        Assert.Equal(languages[1].Code, result[1].Code);
+        Assert.Contains(result, r => r.Name == languages[0].Name);
+        Assert.Contains(result, r => r.Code == languages[1].Code);
     }
 
     /// <summary>
@@ -67,17 +66,16 @@ public class UserLanguageServiceTests
         // Arrange
         var user = FakeDataService.GetGenerationUser();
         var language = new Language("en", "English");
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.Language.AddAsync(language);
-        await db.SaveChangesAsync();
+        await _dbContext.User.AddAsync(user);
+        await _dbContext.Language.AddAsync(language);
+        await _dbContext.SaveChangesAsync();
         var request = new AddLanguageToUser(user.Id, language.Id, DateTime.UtcNow);
 
         // Act
         await _userLanguageService.AddLanguageToUser(request);
 
         // Assert
-        Assert.True(await db.UserLanguage.AnyAsync(ul => ul.LanguageId == language.Id && ul.UserId == user.Id));
+        Assert.True(await _dbContext.UserLanguage.AnyAsync(ul => ul.LanguageId == language.Id && ul.UserId == user.Id));
     }
 
     /// <summary>
@@ -89,17 +87,16 @@ public class UserLanguageServiceTests
         // Arrange
         var user = FakeDataService.GetGenerationUser();
         var languages = new List<Language> { new("en", "English"), new("ro", "Romanian"), new("ru", "Russian") };
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.Language.AddRangeAsync(languages);
-        await db.SaveChangesAsync();
+        await _dbContext.User.AddAsync(user);
+        await _dbContext.Language.AddRangeAsync(languages);
+        await _dbContext.SaveChangesAsync();
         var existingLanguages = new List<UserLanguage>
         {
             new(DateTime.UtcNow, user.Id, languages[2].Id),
             new(DateTime.UtcNow, user.Id, languages[0].Id)
         };
-        await db.UserLanguage.AddRangeAsync(existingLanguages);
-        await db.SaveChangesAsync();
+        await _dbContext.UserLanguage.AddRangeAsync(existingLanguages);
+        await _dbContext.SaveChangesAsync();
         var request = new SaveUserLanguagesRequest(
             user.Id, 
             [
@@ -112,11 +109,11 @@ public class UserLanguageServiceTests
         await _userLanguageService.SaveUserLanguages(request);
 
         // Assert
-        Assert.True(await db.UserLanguage.AnyAsync(ul => 
+        Assert.True(await _dbContext.UserLanguage.AnyAsync(ul => 
             ul.UserId == user.Id 
             && ul.LanguageId == languages[1].Id));
 
-        Assert.False(await db.UserLanguage.AnyAsync(ul =>
+        Assert.False(await _dbContext.UserLanguage.AnyAsync(ul =>
             ul.UserId == user.Id
             && ul.LanguageId == languages[0].Id));
     }

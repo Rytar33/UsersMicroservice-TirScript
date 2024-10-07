@@ -9,7 +9,7 @@ public class ProductCategoryGetListByParentRequestValidator : AbstractValidator<
     public ProductCategoryGetListByParentRequestValidator()
     {
         RuleFor(p => p.ParentCategoryId)
-            .Must(p => !p.HasValue || p <= 0).WithMessage(string.Format(
+            .Must(p => !p.HasValue || p > 0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductCategoryGetListByParentRequest.ParentCategoryId),
                 "1"));

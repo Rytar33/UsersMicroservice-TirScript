@@ -13,9 +13,10 @@ public class UserContactService(DataContext db) : IUserContactService
 {
     public async Task<List<UserContactItem>> GetContacts(int userId, CancellationToken cancellationToken = default)
     {
-        var contacts = db.UserContact.Where(uc => uc.UserId == userId)
-            ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
-        return await contacts
+        if (!await db.User.AnyAsync(u => u.Id == userId, cancellationToken))
+            throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
+        return await db.UserContact
+            .Where(uc => uc.UserId == userId)
             .Select(uc => 
             new UserContactItem(uc.Id, uc.Name, uc.Value))
             .ToListAsync(cancellationToken);
@@ -27,19 +28,32 @@ public class UserContactService(DataContext db) : IUserContactService
     {
         await new UserContactsSaveRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
-        var oldUserContacts = await db.UserContact.Where(uc => uc.UserId == request.UserId).ToListAsync(cancellationToken);
+        // Получаем существующие контакты пользователя
+        var oldUserContacts = await db.UserContact
+            .Where(uc => uc.UserId == request.UserId)
+            .ToListAsync(cancellationToken);
 
-        var deletingUserContacts = oldUserContacts.Where(ouc => !request.Contacts.Any(c => c.Id.HasValue && c.Id == ouc.Id)).ToList();
+        // Определяем контакты, которые нужно удалить
+        var deletingUserContacts = oldUserContacts
+            .Where(ouc => !request.Contacts.Any(c => c.Id.HasValue && c.Id == ouc.Id))
+            .ToList();
 
         if (deletingUserContacts.Count != 0)
             db.UserContact.RemoveRange(deletingUserContacts);
 
+        // Создаем новые контакты
         var newUserContacts = request.Contacts
-            .Where(nuc => nuc.Id != null)
+            .Where(nuc => nuc.Id == null) // Добавляем только новые контакты (с null Id)
             .Select(nuc => new UserContact(nuc.Name, nuc.Value, request.UserId))
             .ToList();
 
-        if (await db.UserContact.AnyAsync(uc => newUserContacts.Any(nuc => nuc.UserId == uc.UserId && nuc.Name == uc.Name), cancellationToken))
+        // Проверяем на совпадения уже существующих контактов в базе данных
+        var existingContacts = await db.UserContact
+            .Where(uc => uc.UserId == request.UserId)
+            .Select(uc => uc.Name)
+            .ToListAsync(cancellationToken);
+
+        if (newUserContacts.Any(nuc => existingContacts.Contains(nuc.Name)))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(UserContact.Name), nameof(UserContact)));
 
         if (newUserContacts.Count != 0)

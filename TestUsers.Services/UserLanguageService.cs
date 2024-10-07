@@ -41,14 +41,24 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
     {
         await new SaveUserLanguagesRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
-        var oldUserLanguagesDeleting = await db.UserLanguage.Where(userLanguage => !request.Languages.Any(nul =>
-            userLanguage.UserId == request.UserId
-            && nul.LanguageId == userLanguage.LanguageId)).ToListAsync(cancellationToken);
+        // Загружаем данные в память
+        var existingUserLanguages = await db.UserLanguage
+            .Where(userLanguage => userLanguage.UserId == request.UserId)
+            .ToListAsync(cancellationToken);
+
+        // Определяем языки для удаления
+        var oldUserLanguagesDeleting = existingUserLanguages
+            .Where(userLanguage => !request.Languages.Any(nul => nul.LanguageId == userLanguage.LanguageId))
+            .ToList();
 
         if (oldUserLanguagesDeleting.Count != 0)
             db.UserLanguage.RemoveRange(oldUserLanguagesDeleting);
 
-        var createUserLanguages = request.Languages.Select(l => new UserLanguage(l.DateLearn, request.UserId, l.LanguageId)).ToList();
+        // Определяем языки для создания
+        var createUserLanguages = request.Languages
+            .Where(l => !existingUserLanguages.Any(userLanguage => userLanguage.LanguageId == l.LanguageId))
+            .Select(l => new UserLanguage(l.DateLearn, request.UserId, l.LanguageId))
+            .ToList();
 
         if (createUserLanguages.Count != 0)
             await db.UserLanguage.AddRangeAsync(createUserLanguages, cancellationToken);

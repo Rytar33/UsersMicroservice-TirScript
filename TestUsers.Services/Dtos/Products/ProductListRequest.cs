@@ -3,7 +3,7 @@
 namespace TestUsers.Services.Dtos.Products;
 
 public record ProductListRequest(
-    List<int> CategoryParametersValuesIds,
+    List<int>? CategoryParametersValuesIds = null,
     int? CategoryId = null,
     string? Search = null,
     decimal? FromAmount = null,

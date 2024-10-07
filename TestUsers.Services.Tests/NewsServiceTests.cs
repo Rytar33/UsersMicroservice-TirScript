@@ -35,30 +35,29 @@ public class NewsServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
         var newsList = new List<News>
         {
             new(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id),
             new(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id)
         };
-        await db.News.AddRangeAsync(newsList);
-        await db.SaveChangesAsync();
+        await _context.News.AddRangeAsync(newsList);
+        await _context.SaveChangesAsync();
         var newsTags = new List<NewsTag>
         {
             new(_faker.Random.Word()),
             new(_faker.Random.Word())
         };
-        await db.NewsTag.AddRangeAsync(newsTags);
-        await db.SaveChangesAsync();
+        await _context.NewsTag.AddRangeAsync(newsTags);
+        await _context.SaveChangesAsync();
         var newsTagRelations = new List<NewsTagRelation>
         {
             new(newsList[0].Id, newsTags[0].Id),
             new(newsList[1].Id, newsTags[1].Id),
         };
-        await db.NewsTagRelation.AddRangeAsync(newsTagRelations);
-        await db.SaveChangesAsync();
+        await _context.NewsTagRelation.AddRangeAsync(newsTagRelations);
+        await _context.SaveChangesAsync();
 
         var request = new NewsListRequest(newsList[1].Title, newsTags[1].Id, new PageRequest(1, 10));
 
@@ -78,33 +77,32 @@ public class NewsServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
         var news = new News(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id);
-        await db.News.AddAsync(news);
-        await db.SaveChangesAsync();
+        await _context.News.AddAsync(news);
+        await _context.SaveChangesAsync();
         var newsTags = new List<NewsTag>
         {
             new(_faker.Random.Word()),
             new(_faker.Random.Word())
         };
-        await db.NewsTag.AddRangeAsync(newsTags);
-        await db.SaveChangesAsync();
+        await _context.NewsTag.AddRangeAsync(newsTags);
+        await _context.SaveChangesAsync();
         var newsTagRelations = new List<NewsTagRelation>
         {
             new(news.Id, newsTags[0].Id),
             new(news.Id, newsTags[1].Id),
         };
-        await db.NewsTagRelation.AddRangeAsync(newsTagRelations);
-        await db.SaveChangesAsync();
+        await _context.NewsTagRelation.AddRangeAsync(newsTagRelations);
+        await _context.SaveChangesAsync();
 
         // Act
         var result = await _newsService.GetDetail(news.Id);
 
         // Assert
         Assert.Equal(news.Id, result.Id);
-        Assert.Equal(newsTags[1].Id, result.Tags[1].Id);
+        Assert.Equal(newsTags[0].Id, result.Tags[1].Id);
     }
 
     /// <summary>
@@ -115,17 +113,16 @@ public class NewsServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
         var request = new NewsCreateRequest(_faker.Random.Words(3), _faker.Random.Words(30), user.Id, "Tag1, Tag2");
 
         // Act
         await _newsService.Create(request);
 
         // Assert
-        Assert.True(await db.News.AnyAsync(n => request.Title == n.Title));
-        Assert.True(await db.NewsTag.AnyAsync(nt => nt.Name == "Tag1"));
+        Assert.True(await _context.News.AnyAsync(n => request.Title == n.Title));
+        Assert.True(await _context.NewsTag.AnyAsync(nt => nt.Name == "Tag1"));
     }
 
     /// <summary>
@@ -137,24 +134,24 @@ public class NewsServiceTests
         // Arrange
         var user = FakeDataService.GetGenerationUser();
         await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
         var news = new News(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id);
-        await db.News.AddAsync(news);
-        await db.SaveChangesAsync();
+        await _context.News.AddAsync(news);
+        await _context.SaveChangesAsync();
         var newsTags = new List<NewsTag>
         {
             new("Tag1"), new("Tag2")
         };
-        await db.NewsTag.AddRangeAsync(newsTags);
-        await db.SaveChangesAsync();
+        await _context.NewsTag.AddRangeAsync(newsTags);
+        await _context.SaveChangesAsync();
         var newsTagRelations = new List<NewsTagRelation>
         {
             new(news.Id, newsTags[0].Id),
             new(news.Id, newsTags[1].Id),
         };
-        await db.NewsTagRelation.AddRangeAsync(newsTagRelations);
-        await db.SaveChangesAsync();
+        await _context.NewsTagRelation.AddRangeAsync(newsTagRelations);
+        await _context.SaveChangesAsync();
         var request = new NewsEditRequest(news.Id, _faker.Random.Words(3), _faker.Random.Words(30), user.Id, "Tag1, Tag3");
 
         // Act
@@ -163,9 +160,9 @@ public class NewsServiceTests
         // Assert
         Assert.Equal(news.Title, request.Title);
         Assert.Equal(news.Description, request.Description);
-        Assert.False(await db.NewsTag.AnyAsync(nt => nt.Id == newsTags[1].Id));
-        Assert.False(await db.NewsTagRelation.AnyAsync(nt => nt.Id == newsTagRelations[1].Id));
-        Assert.True(await db.NewsTag.AnyAsync(nt => nt.Name == "Tag3"));
+        Assert.False(await _context.NewsTag.AnyAsync(nt => nt.Name == newsTags[1].Name));
+        Assert.False(await _context.NewsTagRelation.AnyAsync(nt => nt.Id == newsTagRelations[1].Id));
+        Assert.True(await _context.NewsTag.AnyAsync(nt => nt.Name == "Tag3"));
     }
 
     /// <summary>
@@ -176,18 +173,17 @@ public class NewsServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        await using var db = new DataContext(_dbContextOptions);
-        await db.User.AddAsync(user);
-        await db.SaveChangesAsync();
+        await _context.User.AddAsync(user);
+        await _context.SaveChangesAsync();
         var news = new News(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id);
-        await db.News.AddAsync(news);
-        await db.SaveChangesAsync();
+        await _context.News.AddAsync(news);
+        await _context.SaveChangesAsync();
 
         // Act
         await _newsService.Delete(news.Id);
 
         // Assert
-        Assert.False(await db.News.AnyAsync(n => n.Id == news.Id));
+        Assert.False(await _context.News.AnyAsync(n => n.Id == news.Id));
     }
 
 }

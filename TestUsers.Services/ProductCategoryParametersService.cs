@@ -40,11 +40,14 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
             .Select(v => new ProductCategoryParameterValueListItem(parameter.Id, parameter.Name, v.Value))
             .ToListAsync(cancellationToken);
 
+        var category = await db.ProductCategory.FindAsync([id], cancellationToken)
+            ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
+
         return new ProductCategoryParameterDetailResponse(
             parameter.Id,
             parameter.Name,
             parameter.ProductCategoryId,
-            parameter.ProductCategory.Name,
+            category.Name,
             values);
     }
 
@@ -126,9 +129,19 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
 
     public async Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var rowsRemoved = await db.ProductCategoryParameter.Where(pcp => pcp.Id == id).ExecuteDeleteAsync(cancellationToken);
-        if (rowsRemoved == 0)
-            throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
+        if (!db.Database.IsInMemory())
+        {
+            var rowsRemoved = await db.ProductCategoryParameter.Where(pcp => pcp.Id == id).ExecuteDeleteAsync(cancellationToken);
+            if (rowsRemoved == 0)
+                throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
+        }
+        else
+        {
+            var productCategoryParameter = await db.ProductCategoryParameter.FindAsync([id], cancellationToken)
+                ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
+            db.ProductCategoryParameter.Remove(productCategoryParameter);
+            await db.SaveChangesAsync(cancellationToken);
+        }
         return new BaseResponse();
     }
 }

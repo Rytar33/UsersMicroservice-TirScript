@@ -19,9 +19,12 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
     public async Task<ProductListResponse> GetList(ProductListRequest request, CancellationToken cancellationToken = default)
     {
         await new ProductListRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        var productsForConditions = db.Product.Where(p => 
-            p.ProductCategoryParameterValueProduct.Exists(p => 
-                request.CategoryParametersValuesIds.Contains(p.ProductCategoryParameterValueId)));
+        var productsForConditions = db.Product.AsNoTracking();
+
+        if (request.CategoryParametersValuesIds != null)
+            productsForConditions = productsForConditions.Where(p =>
+                p.ProductCategoryParameterValueProduct.Any(p =>
+                    request.CategoryParametersValuesIds.Contains(p.ProductCategoryParameterValueId)));
 
         if (!string.IsNullOrWhiteSpace(request.Search))
             productsForConditions = productsForConditions
@@ -39,7 +42,7 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
         if (request.CategoryId.HasValue)
             productsForConditions = productsForConditions.Where(x => x.CategoryId == request.CategoryId);
 
-        var countProducts = await productsForConditions.CountAsync(cancellationToken);
+        var countProducts = productsForConditions.Count();
 
         if (request.Page != null)
             productsForConditions = productsForConditions.GetPage(request.Page);
@@ -74,20 +77,25 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
     {
         var product = await db.Product.FindAsync([id], cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
+        var productCategory = await db.ProductCategory.FindAsync([product.CategoryId], cancellationToken)
+            ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
+        var productValueChoise = await db.ProductCategoryParameterValueProduct
+            .Where(pcpvp => pcpvp.ProductId == id)
+            .Select(pcpvp =>
+                new ProductCategoryParameterValueListItem(
+                    pcpvp.ProductCategoryParameterValue.ProductCategoryParameterId,
+                    pcpvp.ProductCategoryParameterValue.ProductCategoryParameter.Name,
+                    pcpvp.ProductCategoryParameterValue.Value)
+            ).ToListAsync(cancellationToken);
         return new ProductDetailResponse(
             product.Id,
             product.Name,
             product.DateCreated,
             product.Amount,
             product.CategoryId,
-            product.ProductCategory.Name,
+            productCategory.Name,
             product.Description,
-            product.ProductCategoryParameterValueProduct.Select(pcpvp => 
-                new ProductCategoryParameterValueListItem(
-                    pcpvp.ProductCategoryParameterValue.ProductCategoryParameterId,
-                    pcpvp.ProductCategoryParameterValue.ProductCategoryParameter.Name,
-                    pcpvp.ProductCategoryParameterValue.Value)
-            ).ToList());
+            productValueChoise);
     }
 
     public async Task<BaseResponse> Save(ProductSaveRequest request, CancellationToken cancellationToken = default)
@@ -146,9 +154,19 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
 
     public async Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var rowsRemoved = await db.Product.Where(p => p.Id == id).ExecuteDeleteAsync(cancellationToken);
-        if (rowsRemoved == 0)
-            throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
+        if (!db.Database.IsInMemory())
+        {
+            var rowsRemoved = await db.Product.Where(p => p.Id == id).ExecuteDeleteAsync(cancellationToken);
+            if (rowsRemoved == 0)
+                throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
+        }
+        else
+        {
+            var product = await db.Product.FindAsync([id], cancellationToken)
+                ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
+            db.Product.Remove(product);
+            await db.SaveChangesAsync(cancellationToken);
+        }
         return new BaseResponse();
     }
 }

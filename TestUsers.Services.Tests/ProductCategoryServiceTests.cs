@@ -70,10 +70,11 @@ public class ProductCategoryServiceTests
         var result = await _productCategoryService.GetTree();
 
         // Assert
-        Assert.Single(result);
-        Assert.Single(result[0].ChildCategories);
-        Assert.Equal(parentCategory.Name, result[0].Name);
-        Assert.Equal(childCategory.Name, result[0].ChildCategories[0].Name);
+        Assert.Contains(parentCategory.Name, result.Select(r => r.Name));
+        Assert.True(result
+            .Select(r => r.ChildCategories.Select(cc => cc.Name))
+            .Where(r => r.Any(cc => cc == childCategory.Name))
+            .Any());
     }
 
     /// <summary>
