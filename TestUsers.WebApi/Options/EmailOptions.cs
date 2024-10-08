@@ -22,15 +22,15 @@ public record EmailOptions : IEmailOptions
         Domain = domain;
     }
 
-    public string NameCompany { get; init; }
+    public string NameCompany { get; init; } = string.Empty;
 
-    public string Email { get; init; }
+    public string Email { get; init; } = string.Empty;
 
-    public string Password { get; init; }
+    public string Password { get; init; } = string.Empty;
 
-    public string Host { get; init; }
+    public string Host { get; init; } = string.Empty;
 
-    public string Port { get; init; }
+    public string Port { get; init; } = string.Empty;
 
-    public string Domain { get; init; }
+    public string Domain { get; init; } = string.Empty;
 }

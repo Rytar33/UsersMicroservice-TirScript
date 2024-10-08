@@ -17,7 +17,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasMaxLength(1000);
 
         builder.Property(p => p.Amount)
-            .HasDefaultValue(0);
+            .HasDefaultValue(0)
+            .HasPrecision(18, 4);
 
         builder.Property(p => p.DateCreated);
 

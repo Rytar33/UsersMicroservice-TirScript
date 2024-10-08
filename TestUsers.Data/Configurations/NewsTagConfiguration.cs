@@ -13,6 +13,8 @@ public class NewsTagConfiguration : IEntityTypeConfiguration<NewsTag>
         builder.Property(p => p.Name)
             .HasMaxLength(50);
 
+        builder.Property(p => p.DateCreated);
+
         builder.HasMany(p => p.News)
             .WithOne(p => p.NewsTag)
             .HasForeignKey(p => p.NewsTagId);

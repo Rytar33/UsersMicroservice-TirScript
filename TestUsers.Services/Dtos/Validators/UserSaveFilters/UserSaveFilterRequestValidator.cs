@@ -13,21 +13,21 @@ public class UserSaveFilterRequestValidator : AbstractValidator<UserSaveFilterRe
             .GreaterThan(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.UserId),
-                "1"));
+                1));
 
         RuleFor(p => p.SaveFilterName)
             .MaximumLength(100)
             .WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
                 nameof(UserSaveFilterRequest.SaveFilterName),
-                "100"));
+                100));
 
         RuleFor(p => p.CategoryParametersValuesIds)
             .Must(ps => ps == null || ps.All(p => p > 0))
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.UserId),
-                "1"));
+                1));
 
         RuleFor(p => p.CategoryParametersValuesIds)
             .Must(p => p == null || !p.GroupBy(v => v).Any(v => v.Count() > 1))
@@ -41,34 +41,34 @@ public class UserSaveFilterRequestValidator : AbstractValidator<UserSaveFilterRe
             .WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
                 nameof(UserSaveFilterRequest.Search),
-                "200"));
+                200));
 
         RuleFor(p => p.CategoryId)
             .Must(p => !p.HasValue || p > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.CategoryId),
-                "1"));
+                1));
 
         RuleForEach(p => p.CategoryParametersValuesIds)
             .GreaterThan(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.CategoryParametersValuesIds),
-                "1"));
+                1));
 
         RuleFor(p => p.FromAmount)
             .Must(p => !p.HasValue || p.Value > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.FromAmount),
-                "0"));
+                0));
 
         RuleFor(p => p.ToAmount)
             .Must(p => !p.HasValue || p.Value > 0)
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(UserSaveFilterRequest.FromAmount),
-                "0"));
+                0));
 
         RuleFor(p => p)
             .Must(p => (!p.FromAmount.HasValue || !p.ToAmount.HasValue)

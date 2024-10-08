@@ -16,9 +16,11 @@ public class UserSaveFilterConfiguration : IEntityTypeConfiguration<UserSaveFilt
         builder.Property(p => p.Search)
             .HasMaxLength(200);
 
-        builder.Property(p => p.FromAmount);
+        builder.Property(p => p.FromAmount)
+            .HasPrecision(18, 4);
 
-        builder.Property(p => p.ToAmount);
+        builder.Property(p => p.ToAmount)
+            .HasPrecision(18, 4);
 
         builder.Property(p => p.DateCreated);
 

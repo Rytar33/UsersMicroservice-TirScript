@@ -10,6 +10,8 @@ public class ProductCategoryParameterValueProductConfiguration : IEntityTypeConf
     {
         builder.HasKey(p => p.Id);
 
+        builder.Property(p => p.DateCreated);
+
         builder.HasOne(p => p.ProductCategoryParameterValue)
             .WithMany(p => p.ProductCategoryParameterValueProduct)
             .HasForeignKey(p => p.ProductCategoryParameterValueId);

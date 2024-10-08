@@ -12,6 +12,6 @@ public class ProductCategoryParametersListRequestValidator : AbstractValidator<P
             .GreaterThan(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductCategoryParametersListRequest.ProductCategoryId),
-                "1"));
+                1));
     }
 }

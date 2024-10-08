@@ -27,6 +27,8 @@ public class UserConfigurations : IEntityTypeConfiguration<User>
         builder.Property(p => p.DateRegister)
             .IsRequired();
 
+        builder.Property(p => p.DateCreated);
+
         builder.Property(p => p.Status)
             .HasDefaultValue(EnumUserStatus.NotConfirmed)
             .HasConversion<string>()

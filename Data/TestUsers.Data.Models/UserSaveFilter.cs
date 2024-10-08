@@ -67,9 +67,4 @@ public class UserSaveFilter : BaseEntity
     /// До цен за товар
     /// </summary>
     public decimal? ToAmount { get; set; }
-
-    /// <summary>
-    /// Дата создание фильтра
-    /// </summary>
-    public DateTime DateCreated { get; set; }
 }

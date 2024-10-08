@@ -18,6 +18,8 @@ public class UserContactConfiguration : IEntityTypeConfiguration<UserContact>
             .IsRequired()
             .HasMaxLength(250);
 
+        builder.Property(p => p.DateCreated);
+
         builder.HasOne(p => p.User)
             .WithMany(p => p.Contacts)
             .HasForeignKey(p => p.UserId)

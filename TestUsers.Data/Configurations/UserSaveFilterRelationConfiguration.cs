@@ -8,7 +8,9 @@ public class UserSaveFilterRelationConfiguration : IEntityTypeConfiguration<User
 {
     public void Configure(EntityTypeBuilder<UserSaveFilterRelation> builder)
     {
-        builder.HasKey(x => x.Id);
+        builder.HasKey(p => p.Id);
+
+        builder.Property(p => p.DateCreated);
 
         builder.HasOne(p => p.UserSaveFilter)
             .WithMany(p => p.CategoryParametersValues)

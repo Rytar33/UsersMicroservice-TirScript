@@ -13,6 +13,8 @@ public class ProductCategoryParameterValueConfiguration : IEntityTypeConfigurati
         builder.Property(p => p.Value)
             .HasMaxLength(500);
 
+        builder.Property(p => p.DateCreated);
+
         builder.HasMany(p => p.ProductCategoryParameterValueProduct)
             .WithOne(p => p.ProductCategoryParameterValue)
             .HasForeignKey(p => p.ProductCategoryParameterValueId);

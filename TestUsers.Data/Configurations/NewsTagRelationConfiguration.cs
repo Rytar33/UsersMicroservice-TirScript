@@ -10,6 +10,8 @@ public class NewsTagRelationConfiguration : IEntityTypeConfiguration<NewsTagRela
     {
         builder.HasKey(p => p.Id);
 
+        builder.Property(p => p.DateCreated);
+
         builder.HasOne(p => p.News)
             .WithMany(p => p.Tags)
             .HasForeignKey(p => p.NewsId);

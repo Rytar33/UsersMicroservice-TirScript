@@ -12,6 +12,6 @@ public class ProductCategoryGetListByParentRequestValidator : AbstractValidator<
             .Must(p => !p.HasValue || p > 0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductCategoryGetListByParentRequest.ParentCategoryId),
-                "1"));
+                1));
     }
 }

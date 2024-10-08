@@ -20,7 +20,7 @@ public class Program
 
         var connectionString = builder.Configuration.GetConnectionString("SqlServer");
 
-        builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
+        builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString, p => p.MigrationsAssembly("TestUsers.Data")));
 
         // Сервисы
         builder.Services.AddScoped<IEmailService, EmailService>();

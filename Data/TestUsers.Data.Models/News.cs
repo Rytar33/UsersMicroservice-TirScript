@@ -28,11 +28,6 @@ public class News : BaseEntity
     public string Description { get; set; }
 
     /// <summary>
-    /// Дата создания
-    /// </summary>
-    public DateTime DateCreated { get; set; }
-
-    /// <summary>
     /// Автор новости
     /// </summary>
     public User Author { get; set; }

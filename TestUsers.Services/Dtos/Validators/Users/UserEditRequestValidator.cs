@@ -9,7 +9,7 @@ public class UserEditRequestValidator : AbstractValidator<UserEditRequest>
     public UserEditRequestValidator()
     {
         RuleFor(p => p.Id)
-            .GreaterThan(0).WithMessage(string.Format(ErrorMessages.LessThanError, nameof(UserEditRequest.Id), "0"));
+            .GreaterThan(0).WithMessage(string.Format(ErrorMessages.LessThanError, nameof(UserEditRequest.Id), 0));
 
         RuleFor(p => p.FullName)
             .NotEmpty().WithMessage(string.Format(ErrorMessages.EmptyError, nameof(UserCreateRequest.FullName)))

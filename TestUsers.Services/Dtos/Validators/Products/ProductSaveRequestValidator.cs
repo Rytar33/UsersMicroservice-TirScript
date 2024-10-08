@@ -13,37 +13,37 @@ public class ProductSaveRequestValidator : AbstractValidator<ProductSaveRequest>
             .WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductSaveRequest.Id),
-                "1"));
+                1));
 
         RuleFor(p => p.Name)
             .MaximumLength(100).WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
                 nameof(ProductSaveRequest.Name),
-                "100"));
+                100));
 
         RuleFor(p => p.Description)
             .MaximumLength(1000).WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
                 nameof(ProductSaveRequest.Description),
-                "1000"));
+                1000));
 
         RuleFor(p => p.CategoryId)
             .GreaterThan(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductSaveRequest.CategoryId),
-                "1"));
+                1));
 
         RuleFor(p => p.CategoryName)
             .MaximumLength(100).WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
                 nameof(ProductSaveRequest.Name),
-                "100"));
+                100));
 
         RuleFor(p => p.Amount)
             .GreaterThanOrEqualTo(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductSaveRequest.CategoryId),
-                "0"));
+                0));
 
         RuleFor(p => p.DateCreated)
             .Must(p => p >= new DateTime(2020, 6, 1))
@@ -53,6 +53,6 @@ public class ProductSaveRequestValidator : AbstractValidator<ProductSaveRequest>
             .GreaterThan(0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductSaveRequest.Id),
-                "1"));
+                1));
     }
 }

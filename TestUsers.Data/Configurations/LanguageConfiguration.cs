@@ -18,6 +18,8 @@ public class LanguageConfiguration : IEntityTypeConfiguration<Language>
             .IsRequired()
             .HasMaxLength(150);
 
+        builder.Property(p => p.DateCreated);
+
         builder.HasMany(p => p.Users)
             .WithOne(p => p.Language)
             .HasForeignKey(p => p.LanguageId)

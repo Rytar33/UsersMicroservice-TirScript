@@ -13,6 +13,8 @@ public class UserLanguageConfiguration : IEntityTypeConfiguration<UserLanguage>
         builder.Property(p => p.DateLearn)
             .IsRequired();
 
+        builder.Property(p => p.DateCreated);
+
         builder.HasOne(p => p.User)
             .WithMany(p => p.UserLanguages)
             .HasForeignKey(p => p.UserId)

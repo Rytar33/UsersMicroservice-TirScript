@@ -12,12 +12,12 @@ public class ProductCategoryCreateRequestValidator : AbstractValidator<ProductCa
             .Must(p => !p.HasValue || p <= 0).WithMessage(string.Format(
                 ErrorMessages.LessThanError,
                 nameof(ProductCategoryCreateRequest.ParentCategoryId),
-                "1"));
+                1));
 
         RuleFor(p => p.Name)
             .MaximumLength(100).WithMessage(string.Format(
                 ErrorMessages.GreaterThanError,
                 nameof(ProductCategoryCreateRequest.Name),
-                "100"));
+                100));
     }
 }

@@ -30,11 +30,6 @@ public class Product : BaseEntity
     public string Description { get; set; }
 
     /// <summary>
-    /// Дата создания
-    /// </summary>
-    public DateTime DateCreated { get; set; }
-
-    /// <summary>
     /// Цена за товар
     /// </summary>
     public decimal Amount { get; set; }
