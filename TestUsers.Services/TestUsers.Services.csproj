@@ -13,6 +13,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.8" />
     <PackageReference Include="MimeKit" Version="4.8.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Tirscript.Logger" Version="8.1.1" />
+    <PackageReference Include="Users.BaseIdentity" Version="8.0.0" />
+    <PackageReference Include="Users.IIdentityService" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

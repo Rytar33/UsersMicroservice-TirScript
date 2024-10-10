@@ -1,5 +1,4 @@
 ﻿using TestUsers.Data.Models;
-using TestUsers.Services.Extensions;
 using TestUsers.Services.Dtos;
 using TestUsers.Services.Dtos.UserLanguages;
 using TestUsers.Services.Dtos.Validators.UserLanguages;
@@ -26,8 +25,15 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<BaseResponse> AddLanguageToUser(AddLanguageToUser request, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> AddLanguageToUser(AddLanguageToUser request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (request.UserId != userSession.UserId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
         await new AddLanguageToUserValidator().ValidateAndThrowAsync(request, cancellationToken);
         if (await db.UserLanguage.AnyAsync(ul => ul.LanguageId == request.LanguageId && ul.UserId == request.UserId, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(UserLanguage.Language), nameof(UserLanguage.User)));
@@ -37,8 +43,16 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
         return new BaseResponse();
     }
 
-    public async Task<BaseResponse> SaveUserLanguages(SaveUserLanguagesRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> SaveUserLanguages(SaveUserLanguagesRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (request.UserId != userSession.UserId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
+
         await new SaveUserLanguagesRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
         // Загружаем данные в память

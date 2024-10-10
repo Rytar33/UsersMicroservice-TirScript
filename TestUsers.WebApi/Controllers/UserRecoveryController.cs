@@ -6,9 +6,8 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1/[controller]/[action]")]
-public class UserRecoveryController(IUserService userService) : Controller
+[Route("[controller]/[action]")]
+public class UserRecoveryController(IUserService userService) : BaseController
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseResponse))]

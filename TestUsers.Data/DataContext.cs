@@ -32,6 +32,21 @@ public sealed class DataContext(DbContextOptions<DataContext> options) : DbConte
     public DbSet<UserSaveFilterRelation> UserSaveFilterRelation { get; set; }
 
     /// <summary>
+    /// Таблица "Сессии пользователей"
+    /// </summary>
+    public DbSet<UserSession> UserSession { get; set; } 
+
+    /// <summary>
+    /// Таблица "Связь многие ко многим между пользователями и ролями"
+    /// </summary>
+    public DbSet<UserRole> UserRole { get; set; }
+
+    /// <summary>
+    /// Таблица "Роль"
+    /// </summary>
+    public DbSet<Role> Role { get; set; }
+
+    /// <summary>
     /// Таблица "Язык"
     /// </summary>
     public DbSet<Language> Language { get; set; }
@@ -78,11 +93,14 @@ public sealed class DataContext(DbContextOptions<DataContext> options) : DbConte
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new UserConfigurations());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new UserContactConfiguration());
         modelBuilder.ApplyConfiguration(new UserLanguageConfiguration());
         modelBuilder.ApplyConfiguration(new UserSaveFilterConfiguration());
         modelBuilder.ApplyConfiguration(new UserSaveFilterRelationConfiguration());
+        modelBuilder.ApplyConfiguration(new UserSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new UserRoleConfiguration());
+        modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new LanguageConfiguration());
         modelBuilder.ApplyConfiguration(new NewsConfiguration());
         modelBuilder.ApplyConfiguration(new NewsTagConfiguration());

@@ -58,10 +58,23 @@ public class User : BaseEntity
     /// </summary>
     public List<UserLanguage> UserLanguages { get; set; } = [];
 
+    /// <summary>
+    /// Список сохранённых фильтров
+    /// </summary>
     public List<UserSaveFilter> SaveFilters { get; set; } = [];
 
     /// <summary>
     /// Список новостей, в которых пользователь является автором
     /// </summary>
     public List<News> NewsCreated { get; set; } = [];
+
+    /// <summary>
+    /// Список сессий пользователя
+    /// </summary>
+    public List<UserSession> Sessions { get; set; } = [];
+
+    /// <summary>
+    /// Роли пользователя
+    /// </summary>
+    public List<UserRole> UserRoles { get; set; } = [];
 }

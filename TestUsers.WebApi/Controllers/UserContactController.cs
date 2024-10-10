@@ -6,9 +6,8 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1/[controller]s")]
-public class UserContactController(IUserContactService userContactService) : Controller
+[Route("[controller]s")]
+public class UserContactController(IUserContactService userContactService) : BaseController
 {
     [HttpGet("{userId:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<UserContactItem>))]
@@ -24,7 +23,7 @@ public class UserContactController(IUserContactService userContactService) : Con
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Save(UserContactsSaveRequest request, CancellationToken cancellationToken = default)
     {
-        await userContactService.SaveContacts(request, cancellationToken);
+        await userContactService.SaveContacts(request, cancellationToken: cancellationToken);
         return NoContent();
     }
 }

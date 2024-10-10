@@ -24,8 +24,17 @@ public class UserContactService(DataContext db) : IUserContactService
 
     public async Task SaveContacts(
         UserContactsSaveRequest request,
+        Guid? sessionId = null,
         CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (request.UserId != userSession.UserId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
+
         await new UserContactsSaveRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
         // Получаем существующие контакты пользователя

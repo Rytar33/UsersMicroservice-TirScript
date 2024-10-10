@@ -5,7 +5,7 @@ using TestUsers.Data.Models;
 using TestUsers.Services.Interfaces.Options;
 using TestUsers.Services.Interfaces.Services;
 using TestUsers.Data;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace TestUsers.Services;
 

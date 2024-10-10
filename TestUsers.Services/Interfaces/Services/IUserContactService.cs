@@ -21,5 +21,5 @@ public interface IUserContactService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task SaveContacts(UserContactsSaveRequest request, CancellationToken cancellationToken = default);
+    Task SaveContacts(UserContactsSaveRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 }

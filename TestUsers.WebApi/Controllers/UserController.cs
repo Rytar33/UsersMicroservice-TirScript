@@ -6,9 +6,7 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1")]
-public class UserController(IUserService userService) : Controller
+public class UserController(IUserService userService) : BaseController
 {
     [HttpGet("[controller]s")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UsersListResponse))]
@@ -32,7 +30,7 @@ public class UserController(IUserService userService) : Controller
     public async Task<IActionResult> Registration(UserCreateRequest request, CancellationToken cancellationToken = default)
     {
         
-        return Ok(await userService.Create(request, cancellationToken));
+        return Ok(await userService.Create(request, cancellationToken: cancellationToken));
     }
 
     [HttpPut("[controller]")]
@@ -41,7 +39,7 @@ public class UserController(IUserService userService) : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Edit(UserEditRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await userService.Edit(request, cancellationToken));
+        return Ok(await userService.Edit(request, cancellationToken: cancellationToken));
     }
 
     [HttpDelete("[controller]/{userId:int}")]
@@ -49,6 +47,6 @@ public class UserController(IUserService userService) : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Remove(int userId, CancellationToken cancellationToken = default)
     {
-        return Ok(await userService.Delete(userId, cancellationToken));
+        return Ok(await userService.Delete(userId, cancellationToken: cancellationToken));
     }
 }

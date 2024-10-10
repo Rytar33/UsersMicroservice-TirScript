@@ -20,7 +20,13 @@ public static class ErrorMessages
 
     public static string GreaterThanError = "{0} не должно быть больше {1}";
 
-    public static string JsonDeserializeError = "Не удалось преобразовать json строку в объект {0}";
+    public static string UnAuthError = "Авторизуйтесь чтобы совершить данное действие";
+
+    public static string ForbiddenError = "У вас недостаточно прав, чтобы сделать это действие";
+
+    public static string YouAuthError = "Вы уже авторизованны, выйдите из системы и повторите попытку";
+
+    public static string YouAreBannedError = "Ваш аккаунт заблокирован";
 
     public static string SaveRequestError = "Не удалось сохранить {0}, возможно вы не правильно указали параметры";
 }

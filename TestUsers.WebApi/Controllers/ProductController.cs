@@ -6,9 +6,7 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1")]
-public class ProductController(IProductService productService) : Controller
+public class ProductController(IProductService productService) : BaseController
 {
     [HttpGet("[controller]s")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ProductListResponse))]
@@ -16,7 +14,7 @@ public class ProductController(IProductService productService) : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> GetList([FromQuery] ProductListRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await productService.GetList(request, cancellationToken));
+        return Ok(await productService.GetList(request, cancellationToken: cancellationToken));
     }
 
     [HttpGet("[controller]/{productId:int}")]

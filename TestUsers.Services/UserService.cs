@@ -44,8 +44,13 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
         return new UserDetailResponse(user.Id, user.Email, user.FullName, user.DateRegister, user.Status);
     }
 
-    public async Task<BaseResponse> Create(UserCreateRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> Create(UserCreateRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            if (await db.UserSession.AnyAsync(us => us.SessionId == sessionId, cancellationToken))
+                throw new IsAuthException(ErrorMessages.YouAuthError);
+        }
         await new UserCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
         if (await db.User.AnyAsync(u => u.Email == request.Email, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(User.Email), nameof(User)));
@@ -57,20 +62,34 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
         return new BaseResponse();
     }
 
-    public async Task<BaseResponse> Edit(UserEditRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> Edit(UserEditRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
         await new UserEditRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
         var user = await db.User.FindAsync([request.Id], cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
         if (await db.User.AnyAsync(u => user.Id != u.Id && u.FullName == request.FullName, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(User.FullName), nameof(User)));
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(u => u.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (user.Id != userSession.UserId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
         user.FullName = request.FullName;
         await db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
-    public async Task<BaseResponse> Delete(int userId, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> Delete(int userId, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (userSession.UserId != userId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
         if (!db.Database.IsInMemory())
         {
             var rowsRemoved = await db.User.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);

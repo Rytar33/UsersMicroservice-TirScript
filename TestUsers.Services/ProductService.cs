@@ -16,7 +16,7 @@ namespace TestUsers.Services;
 
 public class ProductService(DataContext db, IUserSaveFilterService userSaveFilterService) : IProductService
 {
-    public async Task<ProductListResponse> GetList(ProductListRequest request, CancellationToken cancellationToken = default)
+    public async Task<ProductListResponse> GetList(ProductListRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
         await new ProductListRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
         var productsForConditions = db.Product.AsNoTracking();
@@ -68,6 +68,7 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
                     request.Search,
                     request.FromAmount,
                     request.ToAmount),
+                sessionId,
                 cancellationToken);
 
         return new ProductListResponse(productsItems, new PageResponse(countProducts, request.Page?.Page ?? 0, request.Page?.PageSize ?? 0));

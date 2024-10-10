@@ -6,9 +6,7 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1")]
-public class ProductCategoryParameterController(IProductCategoryParametersService productCategoryParametersService) : Controller
+public class ProductCategoryParameterController(IProductCategoryParametersService productCategoryParametersService) : BaseController
 {
     [HttpGet("[controller]s")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ProductCategoryParameterListItem>))]

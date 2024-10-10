@@ -267,6 +267,27 @@ namespace TestUsers.Data.Migrations
                     b.ToTable("ProductCategoryParameterValueProduct");
                 });
 
+            modelBuilder.Entity("TestUsers.Data.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Role");
+                });
+
             modelBuilder.Entity("TestUsers.Data.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -373,6 +394,32 @@ namespace TestUsers.Data.Migrations
                     b.ToTable("UserLanguage");
                 });
 
+            modelBuilder.Entity("TestUsers.Data.Models.UserRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRole");
+                });
+
             modelBuilder.Entity("TestUsers.Data.Models.UserSaveFilter", b =>
                 {
                     b.Property<int>("Id")
@@ -440,6 +487,30 @@ namespace TestUsers.Data.Migrations
                     b.HasIndex("UserSaveFilterId");
 
                     b.ToTable("UserSaveFilterRelation");
+                });
+
+            modelBuilder.Entity("TestUsers.Data.Models.UserSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserSession");
                 });
 
             modelBuilder.Entity("TestUsers.Data.Models.News", b =>
@@ -564,6 +635,25 @@ namespace TestUsers.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TestUsers.Data.Models.UserRole", b =>
+                {
+                    b.HasOne("TestUsers.Data.Models.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TestUsers.Data.Models.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TestUsers.Data.Models.UserSaveFilter", b =>
                 {
                     b.HasOne("TestUsers.Data.Models.ProductCategory", "ProductCategory")
@@ -598,6 +688,17 @@ namespace TestUsers.Data.Migrations
                     b.Navigation("ProductCategoryParameterValue");
 
                     b.Navigation("UserSaveFilter");
+                });
+
+            modelBuilder.Entity("TestUsers.Data.Models.UserSession", b =>
+                {
+                    b.HasOne("TestUsers.Data.Models.User", "User")
+                        .WithMany("Sessions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TestUsers.Data.Models.Language", b =>
@@ -643,6 +744,11 @@ namespace TestUsers.Data.Migrations
                     b.Navigation("UserSaveFilter");
                 });
 
+            modelBuilder.Entity("TestUsers.Data.Models.Role", b =>
+                {
+                    b.Navigation("UserRoles");
+                });
+
             modelBuilder.Entity("TestUsers.Data.Models.User", b =>
                 {
                     b.Navigation("Contacts");
@@ -651,7 +757,11 @@ namespace TestUsers.Data.Migrations
 
                     b.Navigation("SaveFilters");
 
+                    b.Navigation("Sessions");
+
                     b.Navigation("UserLanguages");
+
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("TestUsers.Data.Models.UserSaveFilter", b =>

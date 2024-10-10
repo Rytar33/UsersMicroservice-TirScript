@@ -31,7 +31,7 @@ public interface IUserService
     /// <param name="request">Данные для создание пользователя</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns></returns>
-    Task<BaseResponse> Create(UserCreateRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResponse> Create(UserCreateRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Редактирование пользователя ассинхронно
@@ -39,7 +39,7 @@ public interface IUserService
     /// <param name="request">Данные запрашиваемые на изменение</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns></returns>
-    Task<BaseResponse> Edit(UserEditRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResponse> Edit(UserEditRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Удаление пользователя ассинхронно
@@ -47,7 +47,7 @@ public interface IUserService
     /// <param name="userId">Идентификатор пользователя</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns></returns>
-    Task<BaseResponse> Delete(int userId, CancellationToken cancellationToken = default);
+    Task<BaseResponse> Delete(int userId, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Восстановление пароля аккаунта

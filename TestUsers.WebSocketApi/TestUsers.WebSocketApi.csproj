@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <UserSecretsId>f0c19550-643a-4464-9ef4-93d223c6c3cd</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
+    <PackageReference Include="Tirscript.Logger" Version="8.1.1" />
+    <PackageReference Include="Users.BaseIdentity" Version="8.0.0" />
+    <PackageReference Include="WebSocketControllers.Core" Version="8.0.3" />
+    <PackageReference Include="WebSocketControllers.Core.ExtensionsCore" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Data\TestUsers.Data.Models\TestUsers.Data.Models.csproj" />
+    <ProjectReference Include="..\TestUsers.Services\TestUsers.Services.csproj" />
+  </ItemGroup>
+
+</Project>

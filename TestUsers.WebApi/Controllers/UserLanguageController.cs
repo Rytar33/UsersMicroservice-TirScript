@@ -6,9 +6,8 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1/[controller]")]
-public class UserLanguageService(IUserLanguageService userLanguageService) : Controller
+[Route("[controller]")]
+public class UserLanguageController(IUserLanguageService userLanguageService) : BaseController
 {
     [HttpGet("{userId:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<UserLanguageItemResponse>))]
@@ -24,7 +23,7 @@ public class UserLanguageService(IUserLanguageService userLanguageService) : Con
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> AddLanguageToUser(AddLanguageToUser request, CancellationToken cancellationToken = default)
     {
-        return Ok(await userLanguageService.AddLanguageToUser(request, cancellationToken));
+        return Ok(await userLanguageService.AddLanguageToUser(request, cancellationToken: cancellationToken));
     }
 
     [HttpPut]
@@ -33,6 +32,6 @@ public class UserLanguageService(IUserLanguageService userLanguageService) : Con
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Save(SaveUserLanguagesRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await userLanguageService.SaveUserLanguages(request, cancellationToken));
+        return Ok(await userLanguageService.SaveUserLanguages(request, cancellationToken: cancellationToken));
     }
 }

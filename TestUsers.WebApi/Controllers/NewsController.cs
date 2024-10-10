@@ -6,9 +6,8 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1/[controller]")]
-public class NewsController(INewsService newsService) : Controller
+[Route("News")]
+public class NewsController(INewsService newsService) : BaseController
 {
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(NewsListResponse))]
@@ -32,7 +31,7 @@ public class NewsController(INewsService newsService) : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Create(NewsCreateRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await newsService.Create(request, cancellationToken));
+        return Ok(await newsService.Create(request, cancellationToken: cancellationToken));
     }
 
     [HttpPut]
@@ -41,7 +40,7 @@ public class NewsController(INewsService newsService) : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Edit(NewsEditRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await newsService.Edit(request, cancellationToken));
+        return Ok(await newsService.Edit(request, cancellationToken: cancellationToken));
     }
 
     [HttpDelete("{newsId:int}")]
@@ -49,7 +48,7 @@ public class NewsController(INewsService newsService) : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Delete(int newsId, CancellationToken cancellationToken = default)
     {
-        await newsService.Delete(newsId, cancellationToken);
+        await newsService.Delete(newsId, cancellationToken: cancellationToken);
         return NoContent();
     }
 }

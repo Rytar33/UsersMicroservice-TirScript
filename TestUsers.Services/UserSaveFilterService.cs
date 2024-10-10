@@ -12,8 +12,16 @@ namespace TestUsers.Services;
 
 public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
 {
-    public async Task<List<UserSaveFilterListItem>> GetList(int userId, CancellationToken cancellationToken = default)
+    public async Task<List<UserSaveFilterListItem>> GetList(int userId, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (userId != userSession.UserId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
+
         if (!await db.User.AnyAsync(u => u.Id == userId, cancellationToken))
             throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
 
@@ -39,8 +47,15 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
                     uf.DateCreated)).ToList();
     }
 
-    public async Task<BaseResponse> SaveFilter(UserSaveFilterRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> SaveFilter(UserSaveFilterRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (request.UserId != userSession.UserId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
         await new UserSaveFilterRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
         if (!await db.User.AnyAsync(u => u.Id == request.UserId, cancellationToken))
             throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
@@ -106,8 +121,15 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
         return new BaseResponse();
     }
 
-    public async Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> Delete(int id, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (!await db.UserSaveFilter.AnyAsync(usf => usf.Id == id && userSession.UserId == usf.UserId, cancellationToken))
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
         if (!db.Database.IsInMemory())
         {
             var rowsRemoved = await db.UserSaveFilter.Where(u => u.Id == id).ExecuteDeleteAsync(cancellationToken);

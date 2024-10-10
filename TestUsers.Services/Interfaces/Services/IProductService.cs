@@ -5,7 +5,7 @@ namespace TestUsers.Services.Interfaces.Services;
 
 public interface IProductService
 {
-    Task<ProductListResponse> GetList(ProductListRequest request, CancellationToken cancellationToken = default);  //получить список 
+    Task<ProductListResponse> GetList(ProductListRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);  //получить список 
 
     Task<ProductDetailResponse> GetDetail(int id, CancellationToken cancellationToken = default);  //получить детальную
 

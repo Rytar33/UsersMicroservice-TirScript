@@ -1,29 +1,35 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
+using TestUsers.Services.Dtos;
 using TestUsers.Services.Dtos.UserSaveFilters;
 using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-[ApiController]
-[Route("Api/v0.1")]
-public class UserSaveFilterController(IUserSaveFilterService userSaveFilterService) : Controller
+public class UserSaveFilterController(IUserSaveFilterService userSaveFilterService) : BaseController
 {
     [HttpGet("[controller]s/{userId:int}")]
-
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<UserSaveFilterListItem>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> GetList(int userId, CancellationToken cancellationToken = default)
     {
-        return Ok(await userSaveFilterService.GetList(userId, cancellationToken));
+        return Ok(await userSaveFilterService.GetList(userId, cancellationToken: cancellationToken));
     }
 
     [HttpPut("[controller]")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseResponse))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(List<ValidationFailure>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Save(UserSaveFilterRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await userSaveFilterService.SaveFilter(request, cancellationToken));
+        return Ok(await userSaveFilterService.SaveFilter(request, cancellationToken: cancellationToken));
     }
 
     [HttpDelete("[controller]/{id:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BaseResponse))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
     {
-        return Ok(await userSaveFilterService.Delete(id, cancellationToken));
+        return Ok(await userSaveFilterService.Delete(id, cancellationToken: cancellationToken));
     }
 }

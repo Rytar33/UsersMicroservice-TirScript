@@ -30,7 +30,7 @@ public interface INewsService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResponse> Create(NewsCreateRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResponse> Create(NewsCreateRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Изменить новость
@@ -38,7 +38,7 @@ public interface INewsService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResponse> Edit(NewsEditRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResponse> Edit(NewsEditRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Удалить новость
@@ -46,5 +46,5 @@ public interface INewsService
     /// <param name="newsId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task Delete(int newsId, CancellationToken cancellationToken = default);
+    Task Delete(int newsId, Guid? sessionId = null, CancellationToken cancellationToken = default);
 }

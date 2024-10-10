@@ -55,7 +55,7 @@ public class NewsService(DataContext db) : INewsService
         return new NewsDetailResponse(news.Id, news.Title, news.Description, news.DateCreated, dbNewsTags);
     }
 
-    public async Task<BaseResponse> Create(NewsCreateRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> Create(NewsCreateRequest request, Guid? sessionId = null,  CancellationToken cancellationToken = default)
     {
         await new NewsCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
@@ -63,6 +63,13 @@ public class NewsService(DataContext db) : INewsService
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(News.Title), nameof(News)));
 
         var news = new News(request.Title, request.Description, DateTime.UtcNow, request.AuthorId);
+
+        if (sessionId.HasValue)
+        {
+            var user = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            news.AuthorId = user.UserId;
+        }
 
         await db.News.AddAsync(news, cancellationToken);
 
@@ -96,7 +103,7 @@ public class NewsService(DataContext db) : INewsService
 
     }
 
-    public async Task<BaseResponse> Edit(NewsEditRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResponse> Edit(NewsEditRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
         // Валидация запроса
         await new NewsEditRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
@@ -109,8 +116,17 @@ public class NewsService(DataContext db) : INewsService
         if (await db.News.AnyAsync(n => n.Title == request.Title && n.Id != request.Id, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(News.Title), nameof(News)));
 
+        if (sessionId.HasValue)
+        {
+            var user = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (user.Id != news.AuthorId)
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
+
         // Обновляем данные новости
-        news.AuthorId = request.AuthorId;
+        if (sessionId == null)
+            news.AuthorId = request.AuthorId;
         news.Title = request.Title;
         news.Description = request.Description;
 
@@ -138,14 +154,12 @@ public class NewsService(DataContext db) : INewsService
         {
             // Удаление связей для тегов, которые больше не нужны
             db.NewsTagRelation.RemoveRange(
-                db.NewsTagRelation.Where(ntr => tagsToRemoveIds.Contains(ntr.NewsTagId) && news.Id == ntr.NewsId)
-            );
+                db.NewsTagRelation.Where(ntr => tagsToRemoveIds.Contains(ntr.NewsTagId) && news.Id == ntr.NewsId));
 
             // Удаляем теги, которые больше не используются ни в одной другой новости
             db.NewsTag.RemoveRange(
                 db.NewsTag.Where(t => tagsToRemoveIds.Contains(t.Id) &&
-                                      db.NewsTagRelation.Any(ntr => relationNewsTagsRemovedIds.Contains(ntr.Id)))
-            );
+                                      db.NewsTagRelation.Any(ntr => relationNewsTagsRemovedIds.Contains(ntr.Id))));
         }
 
         // Проверяем существующие теги
@@ -178,8 +192,15 @@ public class NewsService(DataContext db) : INewsService
         return new BaseResponse();
     }
 
-    public async Task Delete(int newsId, CancellationToken cancellationToken = default)
+    public async Task Delete(int newsId, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
+        if (sessionId.HasValue)
+        {
+            var user = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
+                ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
+            if (!await db.News.AnyAsync(n => n.Id == newsId && user.UserId == n.AuthorId, cancellationToken))
+                throw new ForbiddenException(ErrorMessages.ForbiddenError);
+        }
         if (!db.Database.IsInMemory())
         {
             var rowsRemoved = await db.News.Where(n => n.Id == newsId).ExecuteDeleteAsync(cancellationToken);

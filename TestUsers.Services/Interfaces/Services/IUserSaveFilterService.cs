@@ -14,7 +14,7 @@ public interface IUserSaveFilterService
     /// <param name="userId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<List<UserSaveFilterListItem>> GetList(int userId, CancellationToken cancellationToken = default);
+    Task<List<UserSaveFilterListItem>> GetList(int userId, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Сохранение фильтра пользователя
@@ -22,7 +22,7 @@ public interface IUserSaveFilterService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResponse> SaveFilter(UserSaveFilterRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResponse> SaveFilter(UserSaveFilterRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Удаление фильтра пользователя
@@ -30,5 +30,5 @@ public interface IUserSaveFilterService
     /// <param name="id"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default);
+    Task<BaseResponse> Delete(int id, Guid? sessionId = null, CancellationToken cancellationToken = default);
 }

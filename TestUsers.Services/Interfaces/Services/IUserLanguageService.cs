@@ -19,7 +19,7 @@ public interface IUserLanguageService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResponse> AddLanguageToUser(AddLanguageToUser request, CancellationToken cancellationToken = default);
+    Task<BaseResponse> AddLanguageToUser(AddLanguageToUser request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Сохранить список языков пользователя
@@ -27,5 +27,5 @@ public interface IUserLanguageService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResponse> SaveUserLanguages(SaveUserLanguagesRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResponse> SaveUserLanguages(SaveUserLanguagesRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default);
 }
