@@ -6,14 +6,14 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-public class UserController(IUserService userService) : BaseController
+public class UserController(IUserService _userService) : BaseController
 {
     [HttpGet("[controller]s")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UsersListResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(List<ValidationFailure>))]
     public async Task<IActionResult> GetList([FromQuery] UsersListRequest request, CancellationToken cancellationToken)
     {
-        return Ok(await userService.GetList(request, cancellationToken));
+        return Ok(await _userService.GetList(request, cancellationToken));
     }
 
     [HttpGet("[controller]/{userId:int}")]
@@ -21,7 +21,7 @@ public class UserController(IUserService userService) : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> GetDetail(int userId, CancellationToken cancellationToken)
     {
-        return Ok(await userService.GetDetail(userId, cancellationToken));
+        return Ok(await _userService.GetDetail(userId, cancellationToken));
     }
 
     [HttpPost("[controller]")]
@@ -30,7 +30,7 @@ public class UserController(IUserService userService) : BaseController
     public async Task<IActionResult> Registration(UserCreateRequest request, CancellationToken cancellationToken = default)
     {
         
-        return Ok(await userService.Create(request, cancellationToken: cancellationToken));
+        return Ok(await _userService.Create(request, cancellationToken: cancellationToken));
     }
 
     [HttpPut("[controller]")]
@@ -39,7 +39,7 @@ public class UserController(IUserService userService) : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Edit(UserEditRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await userService.Edit(request, cancellationToken: cancellationToken));
+        return Ok(await _userService.Edit(request, cancellationToken: cancellationToken));
     }
 
     [HttpDelete("[controller]/{userId:int}")]
@@ -47,6 +47,6 @@ public class UserController(IUserService userService) : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Remove(int userId, CancellationToken cancellationToken = default)
     {
-        return Ok(await userService.Delete(userId, cancellationToken: cancellationToken));
+        return Ok(await _userService.Delete(userId, cancellationToken: cancellationToken));
     }
 }

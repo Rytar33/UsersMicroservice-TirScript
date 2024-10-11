@@ -12,19 +12,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TestUsers.Services;
 
-public class NewsService(DataContext db) : INewsService
+public class NewsService(DataContext _db) : INewsService
 {
     public async Task<NewsListResponse> GetList(NewsListRequest request, CancellationToken cancellationToken = default)
     {
         await new NewsListRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        var newsForConditions = db.News.AsQueryable();
+        var newsForConditions = _db.News.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
             newsForConditions = newsForConditions
-                .Where(n => 
-                    n.Tags.Select(t => t.NewsTag.Name).Contains(request.Search)
-                    || n.Title.Contains(request.Search)
-                    || n.Description.Contains(request.Search));
+                .Where(n =>
+                    n.Title.Contains(request.Search)
+                    || n.Description.Contains(request.Search)
+                    || n.Tags.Select(t => t.NewsTag.Name).Contains(request.Search));
 
         if (request.TagId.HasValue)
             newsForConditions = newsForConditions.Where(x => x.Tags.Select(t => t.NewsTagId).Contains(request.TagId.Value));
@@ -46,10 +46,10 @@ public class NewsService(DataContext db) : INewsService
 
     public async Task<NewsDetailResponse> GetDetail(int newsId, CancellationToken cancellationToken = default)
     {
-        var news = await db.News.FindAsync([newsId], cancellationToken) 
+        var news = await _db.News.AsNoTracking().FirstOrDefaultAsync(n => n.Id == newsId, cancellationToken) 
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(News)));
 
-        var dbNewsTags = await db.NewsTagRelation.Where(x => x.NewsId == newsId)
+        var dbNewsTags = await _db.NewsTagRelation.Where(x => x.NewsId == newsId)
             .Select(x => new NewsTagResponse(x.NewsTagId, x.NewsTag.Name)).ToListAsync(cancellationToken);
 
         return new NewsDetailResponse(news.Id, news.Title, news.Description, news.DateCreated, dbNewsTags);
@@ -59,24 +59,24 @@ public class NewsService(DataContext db) : INewsService
     {
         await new NewsCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
-        if (await db.News.AnyAsync(n => n.Title == request.Title, cancellationToken))
+        if (await _db.News.AnyAsync(n => n.Title == request.Title, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(News.Title), nameof(News)));
 
         var news = new News(request.Title, request.Description, DateTime.UtcNow, request.AuthorId);
 
         if (sessionId.HasValue)
         {
-            var user = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
+            var user = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             news.AuthorId = user.UserId;
         }
 
-        await db.News.AddAsync(news, cancellationToken);
+        await _db.News.AddAsync(news, cancellationToken);
 
         var newsTagsName = request.Tags.Split(", ").ToList();
 
         // Получаем существующие теги
-        var existingTags = await db.NewsTag
+        var existingTags = await _db.NewsTag
             .Where(t => newsTagsName.Contains(t.Name))
             .ToListAsync(cancellationToken);
 
@@ -87,7 +87,7 @@ public class NewsService(DataContext db) : INewsService
             .ToList();
 
         if (tagsToAdd.Count > 0)
-            await db.NewsTag.AddRangeAsync(tagsToAdd, cancellationToken);
+            await _db.NewsTag.AddRangeAsync(tagsToAdd, cancellationToken);
 
         // Создание новых связей для новости
         var allTags = existingTags.Concat(tagsToAdd).ToList();
@@ -96,9 +96,9 @@ public class NewsService(DataContext db) : INewsService
             .ToList();
 
         if (newTagRelations.Count > 0)
-            await db.NewsTagRelation.AddRangeAsync(newTagRelations, cancellationToken);
+            await _db.NewsTagRelation.AddRangeAsync(newTagRelations, cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
 
     }
@@ -109,16 +109,16 @@ public class NewsService(DataContext db) : INewsService
         await new NewsEditRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
         // Получаем новость по идентификатору
-        var news = await db.News.FindAsync([ request.Id ], cancellationToken)
+        var news = await _db.News.AsNoTracking().FirstOrDefaultAsync(n => n.Id == request.Id, cancellationToken)
              ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(News)));
 
         // Проверяем на совпадение заголовков
-        if (await db.News.AnyAsync(n => n.Title == request.Title && n.Id != request.Id, cancellationToken))
+        if (await _db.News.AnyAsync(n => n.Title == request.Title && n.Id != request.Id, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(News.Title), nameof(News)));
 
         if (sessionId.HasValue)
         {
-            var user = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
+            var user = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             if (user.Id != news.AuthorId)
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
@@ -131,9 +131,9 @@ public class NewsService(DataContext db) : INewsService
         news.Description = request.Description;
 
         // Получаем текущие теги
-        var dbNewsTags = await db.NewsTagRelation
+        var dbNewsTags = await _db.NewsTagRelation
             .Where(x => x.NewsId == request.Id)
-            .Select(x => new { x.NewsTagId, x.NewsTag.Name, x.Id })
+            .Select(x => new { x.NewsTagId, x.NewsTag.Name, x.Id, x.NewsId })
             .ToListAsync(cancellationToken);
 
         // Получаем список тегов из запроса
@@ -153,17 +153,25 @@ public class NewsService(DataContext db) : INewsService
         if (tagsToRemoveIds.Count > 0)
         {
             // Удаление связей для тегов, которые больше не нужны
-            db.NewsTagRelation.RemoveRange(
-                db.NewsTagRelation.Where(ntr => tagsToRemoveIds.Contains(ntr.NewsTagId) && news.Id == ntr.NewsId));
+            _db.NewsTagRelation.RemoveRange(
+                _db.NewsTagRelation.Where(ntr => tagsToRemoveIds.Contains(ntr.NewsTagId) && news.Id == ntr.NewsId));
+
+            // Получаем все теги, которые нужно удалить
+            var tagsToRemove = await _db.NewsTag
+                .Where(t => tagsToRemoveIds.Contains(t.Id))
+                .ToListAsync(cancellationToken);
 
             // Удаляем теги, которые больше не используются ни в одной другой новости
-            db.NewsTag.RemoveRange(
-                db.NewsTag.Where(t => tagsToRemoveIds.Contains(t.Id) &&
-                                      db.NewsTagRelation.Any(ntr => relationNewsTagsRemovedIds.Contains(ntr.Id))));
+            var tagsToRemoveWithRelations = tagsToRemove
+                .Where(t => dbNewsTags.Any(ntr => relationNewsTagsRemovedIds.Contains(ntr.Id)))
+                .ToList();
+
+            _db.NewsTag.RemoveRange(tagsToRemoveWithRelations);
+
         }
 
         // Проверяем существующие теги
-        var existingTags = await db.NewsTag
+        var existingTags = await _db.NewsTag
             .Where(t => newsTagsName.Contains(t.Name))
             .ToListAsync(cancellationToken);
 
@@ -174,20 +182,20 @@ public class NewsService(DataContext db) : INewsService
             .ToList();
 
         if (tagsToAdd.Count > 0)
-            await db.NewsTag.AddRangeAsync(tagsToAdd, cancellationToken);
+            await _db.NewsTag.AddRangeAsync(tagsToAdd, cancellationToken);
 
         // Создание новых связей для новости
         var allTags = existingTags.Concat(tagsToAdd).ToList();
         var newTagRelations = allTags
-            .Where(et => !db.NewsTagRelation.Any(r => r.NewsId == request.Id && r.NewsTagId == et.Id))
+            .Where(et => !dbNewsTags.Any(r => r.NewsId == request.Id && r.NewsTagId == et.Id))
             .Select(et => new NewsTagRelation(news.Id, et.Id))
             .ToList();
 
         if (newTagRelations.Count > 0)
-            await db.NewsTagRelation.AddRangeAsync(newTagRelations, cancellationToken);
+            await _db.NewsTagRelation.AddRangeAsync(newTagRelations, cancellationToken);
 
         // Сохраняем все изменения разом
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
 
         return new BaseResponse();
     }
@@ -196,23 +204,23 @@ public class NewsService(DataContext db) : INewsService
     {
         if (sessionId.HasValue)
         {
-            var user = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
+            var user = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
-            if (!await db.News.AnyAsync(n => n.Id == newsId && user.UserId == n.AuthorId, cancellationToken))
+            if (!await _db.News.AnyAsync(n => n.Id == newsId && user.UserId == n.AuthorId, cancellationToken))
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
         }
-        if (!db.Database.IsInMemory())
+        if (!_db.Database.IsInMemory())
         {
-            var rowsRemoved = await db.News.Where(n => n.Id == newsId).ExecuteDeleteAsync(cancellationToken);
+            var rowsRemoved = await _db.News.Where(n => n.Id == newsId).ExecuteDeleteAsync(cancellationToken);
             if (rowsRemoved == 0)
                 throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(News)));
         }
         else
         {
-            var news = await db.News.FindAsync([newsId], cancellationToken)
+            var news = await _db.News.FirstOrDefaultAsync(n => n.Id == newsId, cancellationToken)
                 ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(News)));
-            db.News.Remove(news);
-            await db.SaveChangesAsync(cancellationToken);
+            _db.News.Remove(news);
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

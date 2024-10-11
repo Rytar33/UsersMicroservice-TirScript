@@ -6,7 +6,7 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebApi.Controllers;
 
-public class ProductController(IProductService productService) : BaseController
+public class ProductController(IProductService _productService) : BaseController
 {
     [HttpGet("[controller]s")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ProductListResponse))]
@@ -14,7 +14,7 @@ public class ProductController(IProductService productService) : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> GetList([FromQuery] ProductListRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await productService.GetList(request, cancellationToken: cancellationToken));
+        return Ok(await _productService.GetList(request, cancellationToken: cancellationToken));
     }
 
     [HttpGet("[controller]/{productId:int}")]
@@ -22,7 +22,7 @@ public class ProductController(IProductService productService) : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> GetDetail(int productId, CancellationToken cancellationToken = default)
     {
-        return Ok(await productService.GetDetail(productId, cancellationToken));
+        return Ok(await _productService.GetDetail(productId, cancellationToken));
     }
 
     [HttpPut("[controller]")]
@@ -30,7 +30,7 @@ public class ProductController(IProductService productService) : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(List<ValidationFailure>))]
     public async Task<IActionResult> Save(ProductSaveRequest request, CancellationToken cancellationToken = default)
     {
-        return Ok(await productService.Save(request, cancellationToken));
+        return Ok(await _productService.Save(request, cancellationToken));
     }
 
     [HttpDelete("[controller]/{productId:int}")]
@@ -38,6 +38,6 @@ public class ProductController(IProductService productService) : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(BaseResponse))]
     public async Task<IActionResult> Delete(int productId, CancellationToken cancellationToken = default)
     {
-        return Ok(await productService.Delete(productId, cancellationToken));
+        return Ok(await _productService.Delete(productId, cancellationToken));
     }
 }

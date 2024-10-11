@@ -14,12 +14,12 @@ using TestUsers.Services.Dtos.UserSaveFilters;
 
 namespace TestUsers.Services;
 
-public class ProductService(DataContext db, IUserSaveFilterService userSaveFilterService) : IProductService
+public class ProductService(DataContext _db, IUserSaveFilterService _userSaveFilterService) : IProductService
 {
     public async Task<ProductListResponse> GetList(ProductListRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
         await new ProductListRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        var productsForConditions = db.Product.AsNoTracking();
+        var productsForConditions = _db.Product.AsNoTracking();
 
         if (request.CategoryParametersValuesIds != null)
             productsForConditions = productsForConditions.Where(p =>
@@ -28,8 +28,7 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
 
         if (!string.IsNullOrWhiteSpace(request.Search))
             productsForConditions = productsForConditions
-                .Where(x => 
-                    x.Name.Contains(request.Search) 
+                .Where(x => x.Name.Contains(request.Search) 
                     || x.Description.Contains(request.Search)
                     || x.ProductCategory.Name.Contains(request.Search));
 
@@ -59,7 +58,7 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
             .ToList();
 
         if (request.SaveFilter && !string.IsNullOrWhiteSpace(request.FilterName) && request.UserId.HasValue)
-            await userSaveFilterService.SaveFilter(
+            await _userSaveFilterService.SaveFilter(
                 new UserSaveFilterRequest(
                     request.UserId.Value,
                     request.FilterName,
@@ -76,11 +75,11 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
 
     public async Task<ProductDetailResponse> GetDetail(int id, CancellationToken cancellationToken = default)
     {
-        var product = await db.Product.FindAsync([id], cancellationToken)
+        var product = await _db.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
-        var productCategory = await db.ProductCategory.FindAsync([product.CategoryId], cancellationToken)
+        var productCategory = await _db.ProductCategory.AsNoTracking().FirstOrDefaultAsync(pc => pc.Id == product.CategoryId, cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
-        var productValueChoise = await db.ProductCategoryParameterValueProduct
+        var productValueChoise = await _db.ProductCategoryParameterValueProduct
             .Where(pcpvp => pcpvp.ProductId == id)
             .Select(pcpvp =>
                 new ProductCategoryParameterValueListItem(
@@ -105,21 +104,21 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
 
         if (request.Id == null)
         {
-            if (await db.Product.AnyAsync(p => p.Name == request.Name, cancellationToken))
+            if (await _db.Product.AnyAsync(p => p.Name == request.Name, cancellationToken))
                 throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(Product.Name), nameof(Product)));
             var product = new Product(request.Name, request.Description, request.DateCreated, request.Amount, request.CategoryId);
-            await db.Product.AddAsync(product, cancellationToken);
-            await db.ProductCategoryParameterValueProduct.AddRangeAsync(
+            await _db.Product.AddAsync(product, cancellationToken);
+            await _db.ProductCategoryParameterValueProduct.AddRangeAsync(
                 request.CategoryParametersValuesIds
                 .Distinct()
                 .Select(cpvi => new ProductCategoryParameterValueProduct(cpvi, product.Id)),cancellationToken);
         }
         else
         {
-            var product = await db.Product.FindAsync([ request.Id ], cancellationToken)
+            var product = await _db.Product.FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken)
                 ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
 
-            if (await db.Product.AnyAsync(p => p.Name == request.Name && request.Id != p.Id, cancellationToken))
+            if (await _db.Product.AnyAsync(p => p.Name == request.Name && request.Id != p.Id, cancellationToken))
                 throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(Product.Name), nameof(Product)));
 
             product.Name = request.Name;
@@ -128,45 +127,45 @@ public class ProductService(DataContext db, IUserSaveFilterService userSaveFilte
             product.Amount = request.Amount;
             product.CategoryId = request.CategoryId;
 
-            var productCategoryParameterValuesOnDelet = await db.ProductCategoryParameterValueProduct
+            var productCategoryParameterValuesOnDelet = await _db.ProductCategoryParameterValueProduct
                 .Where(pcpvp => 
                     pcpvp.ProductId == product.Id 
                     && !request.CategoryParametersValuesIds.Contains(pcpvp.ProductCategoryParameterValueId))
                 .ToListAsync(cancellationToken);
 
             if (productCategoryParameterValuesOnDelet.Count > 0)
-                db.ProductCategoryParameterValueProduct.RemoveRange(productCategoryParameterValuesOnDelet);
+                _db.ProductCategoryParameterValueProduct.RemoveRange(productCategoryParameterValuesOnDelet);
 
             var productCategoryParameterValuesOnAdd = request.CategoryParametersValuesIds
                 .Distinct()
-                .Where(cpvi => !db.ProductCategoryParameterValueProduct
+                .Where(cpvi => !_db.ProductCategoryParameterValueProduct
                     .Any(pcpvp => pcpvp.ProductId == product.Id
                         && pcpvp.ProductCategoryParameterValueId == cpvi))
                 .Select(cpvi => new ProductCategoryParameterValueProduct(cpvi, product.Id))
                 .ToList();
 
             if (productCategoryParameterValuesOnAdd.Count > 0)
-                await db.ProductCategoryParameterValueProduct.AddRangeAsync(productCategoryParameterValuesOnAdd, cancellationToken);
+                await _db.ProductCategoryParameterValueProduct.AddRangeAsync(productCategoryParameterValuesOnAdd, cancellationToken);
         }
         
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
     public async Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default)
     {
-        if (!db.Database.IsInMemory())
+        if (!_db.Database.IsInMemory())
         {
-            var rowsRemoved = await db.Product.Where(p => p.Id == id).ExecuteDeleteAsync(cancellationToken);
+            var rowsRemoved = await _db.Product.Where(p => p.Id == id).ExecuteDeleteAsync(cancellationToken);
             if (rowsRemoved == 0)
                 throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
         }
         else
         {
-            var product = await db.Product.FindAsync([id], cancellationToken)
+            var product = await _db.Product.FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
                 ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(Product)));
-            db.Product.Remove(product);
-            await db.SaveChangesAsync(cancellationToken);
+            _db.Product.Remove(product);
+            await _db.SaveChangesAsync(cancellationToken);
         }
         return new BaseResponse();
     }

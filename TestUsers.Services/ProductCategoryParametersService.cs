@@ -12,12 +12,12 @@ using FluentValidation;
 
 namespace TestUsers.Services;
 
-public class ProductCategoryParametersService(DataContext db) : IProductCategoryParametersService
+public class ProductCategoryParametersService(DataContext _db) : IProductCategoryParametersService
 {
     public async Task<List<ProductCategoryParameterListItem>> GetList(ProductCategoryParametersListRequest request, CancellationToken cancellationToken = default)
     {
         await new ProductCategoryParametersListRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        var parametersCategory = db.ProductCategoryParameter.Where(pcp => pcp.ProductCategoryId == request.ProductCategoryId);
+        var parametersCategory = _db.ProductCategoryParameter.Where(pcp => pcp.ProductCategoryId == request.ProductCategoryId);
         if (!string.IsNullOrWhiteSpace(request.Search))
             parametersCategory = parametersCategory.Where(pcp => pcp.Name.Contains(request.Search));
         return await parametersCategory
@@ -32,15 +32,15 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
 
     public async Task<ProductCategoryParameterDetailResponse> GetDetail(int id, CancellationToken cancellationToken = default)
     {
-        var parameter = await db.ProductCategoryParameter.FindAsync([id], cancellationToken) 
+        var parameter = await _db.ProductCategoryParameter.AsNoTracking().FirstOrDefaultAsync(pcp => pcp.Id == id, cancellationToken) 
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
 
-        var values = await db.ProductCategoryParameterValue
+        var values = await _db.ProductCategoryParameterValue
             .Where(v => v.ProductCategoryParameterId == parameter.Id)
             .Select(v => new ProductCategoryParameterValueListItem(parameter.Id, parameter.Name, v.Value))
             .ToListAsync(cancellationToken);
 
-        var category = await db.ProductCategory.FindAsync([id], cancellationToken)
+        var category = await _db.ProductCategory.AsNoTracking().FirstOrDefaultAsync(pc => pc.Id == id, cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategory)));
 
         return new ProductCategoryParameterDetailResponse(
@@ -55,7 +55,7 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
     {
         await new ProductCategoryParameterValuesListRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
-        var valuesForConditions = db.ProductCategoryParameterValue.Where(pcpv =>
+        var valuesForConditions = _db.ProductCategoryParameterValue.Where(pcpv =>
             pcpv.ProductCategoryParameterId == request.ProductCategoryParameterId
             && pcpv.Value.Contains(request.Search)
             || pcpv.ProductCategoryParameter.Name.Contains(request.Search));
@@ -65,7 +65,7 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
                 pcpv.Value.Contains(request.Search)
                 || pcpv.ProductCategoryParameter.Name.Contains(request.Search));
 
-        var countValuesParameter = await valuesForConditions.CountAsync(cancellationToken);
+        var countValuesParameter = valuesForConditions.Count();
 
         if (request.Page != null)
             valuesForConditions = valuesForConditions.GetPage(request.Page);
@@ -78,19 +78,19 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
     public async Task<BaseResponse> Create(ProductCategoryParameterCreateRequest request, CancellationToken cancellationToken = default)
     {
         await new ProductCategoryParameterCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        if (await db.ProductCategoryParameter.AnyAsync(pcp => pcp.Name == request.Name, cancellationToken))
+        if (await _db.ProductCategoryParameter.AnyAsync(pcp => pcp.Name == request.Name, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(ProductCategoryParameter.Name), nameof(ProductCategoryParameter)));
         var parameter = new ProductCategoryParameter(request.Name, request.ProductCategoryId);
-        await db.ProductCategoryParameter.AddAsync(parameter, cancellationToken);
+        await _db.ProductCategoryParameter.AddAsync(parameter, cancellationToken);
 
         var values = request.Values
             .Distinct()
             .Select(v => new ProductCategoryParameterValue(v, parameter.Id))
             .ToList();
         if (values.Count > 0)
-            await db.ProductCategoryParameterValue.AddRangeAsync(values, cancellationToken);
+            await _db.ProductCategoryParameterValue.AddRangeAsync(values, cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
@@ -98,49 +98,49 @@ public class ProductCategoryParametersService(DataContext db) : IProductCategory
     {
         await new ProductCategoryParameterUpdateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
-        var parameter = await db.ProductCategoryParameter.FindAsync([request.Id], cancellationToken)
+        var parameter = await _db.ProductCategoryParameter.FirstOrDefaultAsync(pcp => pcp.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
 
-        if (await db.ProductCategoryParameter.AnyAsync(pcp => pcp.Name == request.Name && pcp.Id != request.Id, cancellationToken))
+        if (await _db.ProductCategoryParameter.AnyAsync(pcp => pcp.Name == request.Name && pcp.Id != request.Id, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(ProductCategoryParameter.Name), nameof(ProductCategoryParameter)));
 
         parameter.Name = request.Name;
         parameter.ProductCategoryId = request.ProductCategoryId;
 
-        var valuesOnDelet = await db.ProductCategoryParameterValue
+        var valuesOnDelet = await _db.ProductCategoryParameterValue
             .Where(v => 
                 v.ProductCategoryParameterId == parameter.Id 
                 && !request.Values.Any(value => value == v.Value))
             .ToListAsync(cancellationToken);
         if (valuesOnDelet.Count > 0)
-            db.ProductCategoryParameterValue.RemoveRange(valuesOnDelet);
+            _db.ProductCategoryParameterValue.RemoveRange(valuesOnDelet);
 
-        var valuesOnCreate = await db.ProductCategoryParameterValue
+        var valuesOnCreate = await _db.ProductCategoryParameterValue
             .Where(v =>
                 v.ProductCategoryParameterId == parameter.Id
                 && request.Values.Any(value => value == v.Value))
             .ToListAsync(cancellationToken);
         if (valuesOnCreate.Count > 0)
-            await db.ProductCategoryParameterValue.AddRangeAsync(valuesOnCreate, cancellationToken);
+            await _db.ProductCategoryParameterValue.AddRangeAsync(valuesOnCreate, cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
     public async Task<BaseResponse> Delete(int id, CancellationToken cancellationToken = default)
     {
-        if (!db.Database.IsInMemory())
+        if (!_db.Database.IsInMemory())
         {
-            var rowsRemoved = await db.ProductCategoryParameter.Where(pcp => pcp.Id == id).ExecuteDeleteAsync(cancellationToken);
+            var rowsRemoved = await _db.ProductCategoryParameter.Where(pcp => pcp.Id == id).ExecuteDeleteAsync(cancellationToken);
             if (rowsRemoved == 0)
                 throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
         }
         else
         {
-            var productCategoryParameter = await db.ProductCategoryParameter.FindAsync([id], cancellationToken)
+            var productCategoryParameter = await _db.ProductCategoryParameter.FirstOrDefaultAsync(pcp => pcp.Id == id, cancellationToken)
                 ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(ProductCategoryParameter)));
-            db.ProductCategoryParameter.Remove(productCategoryParameter);
-            await db.SaveChangesAsync(cancellationToken);
+            _db.ProductCategoryParameter.Remove(productCategoryParameter);
+            await _db.SaveChangesAsync(cancellationToken);
         }
         return new BaseResponse();
     }

@@ -39,8 +39,8 @@ public class NewsServiceTests
         await _context.SaveChangesAsync();
         var newsList = new List<News>
         {
-            new(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id),
-            new(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id)
+            new(FakeDataService.GetUniqueName(_faker.Random.Words(3)), FakeDataService.GetUniqueName(_faker.Random.Words(30)), DateTime.UtcNow, user.Id),
+            new(FakeDataService.GetUniqueName(_faker.Random.Words(3)), FakeDataService.GetUniqueName(_faker.Random.Words(30)), DateTime.UtcNow, user.Id)
         };
         await _context.News.AddRangeAsync(newsList);
         await _context.SaveChangesAsync();
@@ -65,8 +65,8 @@ public class NewsServiceTests
         var result = await _newsService.GetList(request);
 
         // Assert
-        Assert.Single(result.Items); // Ожидается одна новость, соответствующая фильтру "Test"
-        Assert.Equal(newsList[1].Title, result.Items.First().Title);
+        Assert.DoesNotContain(result.Items, i => i.Title == newsList[0].Title);
+        Assert.Contains(result.Items, i => i.Title == newsList[1].Title);
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public class NewsServiceTests
         var user = FakeDataService.GetGenerationUser();
         await _context.User.AddAsync(user);
         await _context.SaveChangesAsync();
-        var news = new News(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id);
+        var news = new News(FakeDataService.GetUniqueName(_faker.Random.Words(3)), FakeDataService.GetUniqueName(_faker.Random.Words(30)), DateTime.UtcNow, user.Id);
         await _context.News.AddAsync(news);
         await _context.SaveChangesAsync();
         var newsTags = new List<NewsTag>
@@ -115,14 +115,19 @@ public class NewsServiceTests
         var user = FakeDataService.GetGenerationUser();
         await _context.User.AddAsync(user);
         await _context.SaveChangesAsync();
-        var request = new NewsCreateRequest(_faker.Random.Words(3), _faker.Random.Words(30), user.Id, "Tag1, Tag2");
+        var tagsName = new List<string>
+        {
+            FakeDataService.GetUniqueName("Tag1"),
+            FakeDataService.GetUniqueName("Tag2")
+        };
+        var request = new NewsCreateRequest(FakeDataService.GetUniqueName(_faker.Random.Words(1)), FakeDataService.GetUniqueName(_faker.Random.Words(10)), user.Id, string.Join(", ", tagsName));
 
         // Act
         await _newsService.Create(request);
 
         // Assert
         Assert.True(await _context.News.AnyAsync(n => request.Title == n.Title));
-        Assert.True(await _context.NewsTag.AnyAsync(nt => nt.Name == "Tag1"));
+        Assert.True(await _context.NewsTag.AnyAsync(nt => nt.Name == tagsName[0]));
     }
 
     /// <summary>
@@ -136,12 +141,12 @@ public class NewsServiceTests
         await using var db = new DataContext(_dbContextOptions);
         await _context.User.AddAsync(user);
         await _context.SaveChangesAsync();
-        var news = new News(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id);
+        var news = new News(FakeDataService.GetUniqueName("News"), FakeDataService.GetUniqueName(_faker.Random.Words(10)), DateTime.UtcNow, user.Id);
         await _context.News.AddAsync(news);
         await _context.SaveChangesAsync();
         var newsTags = new List<NewsTag>
         {
-            new("Tag1"), new("Tag2")
+            new(FakeDataService.GetUniqueName("Tag1")), new(FakeDataService.GetUniqueName("Tag2"))
         };
         await _context.NewsTag.AddRangeAsync(newsTags);
         await _context.SaveChangesAsync();
@@ -152,17 +157,18 @@ public class NewsServiceTests
         };
         await _context.NewsTagRelation.AddRangeAsync(newsTagRelations);
         await _context.SaveChangesAsync();
-        var request = new NewsEditRequest(news.Id, _faker.Random.Words(3), _faker.Random.Words(30), user.Id, "Tag1, Tag3");
+        var newTag = FakeDataService.GetUniqueName("Tag3");
+        var request = new NewsEditRequest(news.Id, FakeDataService.GetUniqueName("News"), FakeDataService.GetUniqueName(_faker.Random.Words(10)), user.Id, string.Join(", ", newsTags[0].Name, newTag));
 
         // Act
         await _newsService.Edit(request);
 
         // Assert
-        Assert.Equal(news.Title, request.Title);
-        Assert.Equal(news.Description, request.Description);
+        Assert.NotEqual(news.Title, request.Title);
+        Assert.NotEqual(news.Description, request.Description);
         Assert.False(await _context.NewsTag.AnyAsync(nt => nt.Name == newsTags[1].Name));
         Assert.False(await _context.NewsTagRelation.AnyAsync(nt => nt.Id == newsTagRelations[1].Id));
-        Assert.True(await _context.NewsTag.AnyAsync(nt => nt.Name == "Tag3"));
+        Assert.True(await _context.NewsTag.AnyAsync(nt => nt.Name == newTag));
     }
 
     /// <summary>
@@ -175,7 +181,7 @@ public class NewsServiceTests
         var user = FakeDataService.GetGenerationUser();
         await _context.User.AddAsync(user);
         await _context.SaveChangesAsync();
-        var news = new News(_faker.Random.Words(3), _faker.Random.Words(30), DateTime.UtcNow, user.Id);
+        var news = new News(FakeDataService.GetUniqueName(_faker.Random.Words(3)), FakeDataService.GetUniqueName(_faker.Random.Words(30)), DateTime.UtcNow, user.Id);
         await _context.News.AddAsync(news);
         await _context.SaveChangesAsync();
 

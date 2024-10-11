@@ -5,20 +5,20 @@ using TestUsers.WebSocketApi.Models;
 
 namespace TestUsers.WebSocketApi.Controllers;
 
-public class UserRecoveryWsController(IUserService userService) : BaseWsController
+public class UserRecoveryWsController(IUserService _userService) : BaseWsController
 {
     public async Task<BaseResponse> SendCode(RecoverySendCodeRequest request)
     {
-        return await userService.RecoveryStart(new RecoveryStartRequest(request.Email, null));
+        return await _userService.RecoveryStart(new RecoveryStartRequest(request.Email, null));
     }
 
     public async Task<BaseResponse> ConfrimCode(RecoveryStartRequest request)
     {
-        return await userService.RecoveryStart(request);
+        return await _userService.RecoveryStart(request);
     }
 
     public async Task<BaseResponse> RecoveryEnd(RecoveryEndRequest request)
     {
-        return await userService.RecoveryEnd(request);
+        return await _userService.RecoveryEnd(request);
     }
 }

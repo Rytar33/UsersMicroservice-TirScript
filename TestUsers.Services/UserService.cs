@@ -13,12 +13,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TestUsers.Services;
 
-public class UserService(IEmailService emailService, DataContext db) : IUserService
+public class UserService(IEmailService _emailService, DataContext _db) : IUserService
 {
     public async Task<UsersListResponse> GetList(UsersListRequest request, CancellationToken cancellationToken = default)
     {
         await new UsersListRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        var usersForConditions = db.User.AsQueryable();
+        var usersForConditions = _db.User.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
             usersForConditions = usersForConditions
@@ -39,7 +39,7 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
 
     public async Task<UserDetailResponse> GetDetail(int userId, CancellationToken cancellationToken = default)
     {
-        var user = await db.User.FindAsync([ userId ], cancellationToken)
+        var user = await _db.User.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
         return new UserDetailResponse(user.Id, user.Email, user.FullName, user.DateRegister, user.Status);
     }
@@ -48,36 +48,36 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
     {
         if (sessionId.HasValue)
         {
-            if (await db.UserSession.AnyAsync(us => us.SessionId == sessionId, cancellationToken))
+            if (await _db.UserSession.AnyAsync(us => us.SessionId == sessionId, cancellationToken))
                 throw new IsAuthException(ErrorMessages.YouAuthError);
         }
         await new UserCreateRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        if (await db.User.AnyAsync(u => u.Email == request.Email, cancellationToken))
+        if (await _db.User.AnyAsync(u => u.Email == request.Email, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(User.Email), nameof(User)));
-        if (await db.User.AnyAsync(u => u.FullName == request.FullName, cancellationToken))
+        if (await _db.User.AnyAsync(u => u.FullName == request.FullName, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(User.FullName), nameof(User)));
         var user = new User(request.Email, request.FullName, request.Password.GetSha256());
-        await db.User.AddAsync(user, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.User.AddAsync(user, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
     public async Task<BaseResponse> Edit(UserEditRequest request, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
         await new UserEditRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        var user = await db.User.FindAsync([request.Id], cancellationToken)
+        var user = await _db.User.FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
-        if (await db.User.AnyAsync(u => user.Id != u.Id && u.FullName == request.FullName, cancellationToken))
+        if (await _db.User.AnyAsync(u => user.Id != u.Id && u.FullName == request.FullName, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(User.FullName), nameof(User)));
         if (sessionId.HasValue)
         {
-            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(u => u.SessionId == sessionId, cancellationToken)
+            var userSession = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(u => u.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             if (user.Id != userSession.UserId)
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
         }
         user.FullName = request.FullName;
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
@@ -85,23 +85,23 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
     {
         if (sessionId.HasValue)
         {
-            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+            var userSession = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             if (userSession.UserId != userId)
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
         }
-        if (!db.Database.IsInMemory())
+        if (!_db.Database.IsInMemory())
         {
-            var rowsRemoved = await db.User.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);
+            var rowsRemoved = await _db.User.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);
             if (rowsRemoved == 0)
                 throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
         }
         else
         {
-            var user = await db.User.FindAsync([ userId ], cancellationToken) 
+            var user = await _db.User.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken) 
                 ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
-            db.User.Remove(user);
-            await db.SaveChangesAsync(cancellationToken);
+            _db.User.Remove(user);
+            await _db.SaveChangesAsync(cancellationToken);
         }
         return new BaseResponse();
     }
@@ -110,14 +110,14 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
     {
         await new RecoveryStartRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
-        var user = await db.User.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken) 
+        var user = await _db.User.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken) 
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
         if (request.RequestCode == null)
         {
             user.RecoveryToken = string.Empty.GetGenerateToken();
-            await db.SaveChangesAsync(cancellationToken);
-            if (!db.Database.IsInMemory())
-                await emailService.SendEmailAsync(user.Email, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            if (!_db.Database.IsInMemory())
+                await _emailService.SendEmailAsync(user.Email, cancellationToken);
         }
         else
         {
@@ -132,7 +132,7 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
     {
         await new RecoveryEndRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
-        var user = await db.User.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken) 
+        var user = await _db.User.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken) 
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
         if (user.RecoveryToken != request.RecoveryTokenRequest)
             throw new ArgumentException(string.Format(ErrorMessages.NotCoincideError, nameof(User.RecoveryToken)));
@@ -140,7 +140,7 @@ public class UserService(IEmailService emailService, DataContext db) : IUserServ
         user.PasswordHash = request.NewPassword.GetSha256();
         user.RecoveryToken = null;
 
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
 
         return new BaseResponse();
     }

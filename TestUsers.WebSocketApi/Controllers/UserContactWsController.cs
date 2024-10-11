@@ -4,16 +4,16 @@ using TestUsers.WebSocketApi.Models;
 
 namespace TestUsers.WebSocketApi.Controllers;
 
-public class UserContactWsController(IUserContactService userContactService) : BaseWsController
+public class UserContactWsController(IUserContactService _userContactService) : BaseWsController
 {
     public async Task<List<UserContactItem>> GetList(UserContactListRequest request)
     {
-        return await userContactService.GetContacts(request.UserContactId);
+        return await _userContactService.GetContacts(request.UserContactId);
     }
 
     public async Task<bool> Save(UserContactsSaveRequest request)
     {
-        await userContactService.SaveContacts(request, Socket.SessionId);
+        await _userContactService.SaveContacts(request, Socket.SessionId);
         return true;
     }
 }

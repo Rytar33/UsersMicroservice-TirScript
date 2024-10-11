@@ -34,14 +34,14 @@ public class ProductServiceTests
     public async Task GetList_ShouldReturnProductsBasedOnSearchConditions_AndSaveFilterWhenFlagIsTrue()
     {
         // Arrange
-        var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var category = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
         await _dataContext.ProductCategory.AddAsync(category);
         await _dataContext.SaveChangesAsync();
 
         var products = new List<Product>
         {
-            new(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id),
-            new(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id)
+            new(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), FakeDataService.GetUniqueName(_faker.Commerce.ProductDescription()), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id),
+            new(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), FakeDataService.GetUniqueName(_faker.Commerce.ProductDescription()), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id)
         };
         await _dataContext.Product.AddRangeAsync(products);
         await _dataContext.SaveChangesAsync();
@@ -81,11 +81,11 @@ public class ProductServiceTests
     public async Task GetDetail_ShouldReturnProductDetail_WhenProductExists()
     {
         // Arrange
-        var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var category = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
         await _dataContext.ProductCategory.AddAsync(category);
         await _dataContext.SaveChangesAsync();
 
-        var product = new Product(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id);
+        var product = new Product(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), FakeDataService.GetUniqueName(_faker.Commerce.ProductDescription()), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id);
         await _dataContext.Product.AddAsync(product);
         await _dataContext.SaveChangesAsync();
 
@@ -117,28 +117,28 @@ public class ProductServiceTests
     public async Task Save_ShouldCreateNewProduct_WhenValidRequest()
     {
         // Arrange
-        var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var category = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
         await _dataContext.ProductCategory.AddAsync(category);
         await _dataContext.SaveChangesAsync();
-        var parameter = new ProductCategoryParameter(_faker.Commerce.ProductMaterial(), category.Id);
+        var parameter = new ProductCategoryParameter(FakeDataService.GetUniqueName(_faker.Commerce.ProductMaterial()), category.Id);
         await _dataContext.ProductCategoryParameter.AddAsync(parameter);
         await _dataContext.SaveChangesAsync();
         var values = new List<ProductCategoryParameterValue> 
         { 
-            new(_faker.Commerce.Color(), parameter.Id),
-            new(_faker.Commerce.Color(), parameter.Id),
+            new(FakeDataService.GetUniqueName(_faker.Commerce.Color()), parameter.Id),
+            new(FakeDataService.GetUniqueName(_faker.Commerce.Color()), parameter.Id),
         };
         await _dataContext.ProductCategoryParameterValue.AddRangeAsync(values);
         await _dataContext.SaveChangesAsync();
 
         var request = new ProductSaveRequest(
             null,
-            _faker.Commerce.ProductName(),
+            FakeDataService.GetUniqueName(_faker.Commerce.ProductName()),
             DateTime.UtcNow,
             _faker.Random.Decimal(10, 500),
             category.Id,
             category.Name,
-            _faker.Commerce.ProductDescription(),
+            FakeDataService.GetUniqueName(_faker.Commerce.ProductDescription()),
             values.Select(values => values.Id).ToList());
 
         // Act
@@ -164,7 +164,7 @@ public class ProductServiceTests
         await _dataContext.ProductCategory.AddAsync(category);
         await _dataContext.SaveChangesAsync();
 
-        var product = new Product(_faker.Commerce.ProductName(), _faker.Commerce.ProductDescription(), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id);
+        var product = new Product(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), FakeDataService.GetUniqueName(_faker.Commerce.ProductDescription()), DateTime.Now, _faker.Random.Decimal(10, 500), category.Id);
         await _dataContext.Product.AddAsync(product);
         await _dataContext.SaveChangesAsync();
 

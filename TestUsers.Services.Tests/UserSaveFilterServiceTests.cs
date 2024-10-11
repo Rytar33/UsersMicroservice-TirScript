@@ -40,7 +40,7 @@ public class UserSaveFilterServiceTests
         await _dbContext.User.AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
-        var filter = new UserSaveFilter(user.Id, "Filter1", DateTime.UtcNow, null, "search", 100, 500);
+        var filter = new UserSaveFilter(user.Id, FakeDataService.GetUniqueName("Filter1"), DateTime.UtcNow, null, "search", 100, 500);
         await _dbContext.UserSaveFilter.AddAsync(filter);
         await _dbContext.SaveChangesAsync();
 
@@ -82,22 +82,22 @@ public class UserSaveFilterServiceTests
         await _dbContext.User.AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
-        var productCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var productCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
         await _dbContext.ProductCategory.AddAsync(productCategory);
         await _dbContext.SaveChangesAsync();
 
-        var parameter = new ProductCategoryParameter(_faker.Commerce.ProductName(), productCategory.Id);
+        var parameter = new ProductCategoryParameter(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), productCategory.Id);
         await _dbContext.ProductCategoryParameter.AddAsync(parameter);
         await _dbContext.SaveChangesAsync();
 
         var values = new List<ProductCategoryParameterValue> 
         {
-            new("Value1", parameter.Id), new("Value2", parameter.Id)
+            new(FakeDataService.GetUniqueName("Value1"), parameter.Id), new(FakeDataService.GetUniqueName("Value2"), parameter.Id)
         };
         await _dbContext.ProductCategoryParameterValue.AddRangeAsync(values);
         await _dbContext.SaveChangesAsync();
 
-        var request = new UserSaveFilterRequest(user.Id, "NewFilter", [ 1, 2 ], null, "search", 100, 500);
+        var request = new UserSaveFilterRequest(user.Id, FakeDataService.GetUniqueName("NewFilter"), values.Select(v => v.Id).ToList(), null, "search", 100, 500);
 
         // Act
         await _userSaveFilterService.SaveFilter(request);
@@ -121,11 +121,11 @@ public class UserSaveFilterServiceTests
         await _dbContext.User.AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
-        var existingFilter = new UserSaveFilter(user.Id, "ExistingFilter", DateTime.UtcNow, null, "search", 100, 500);
+        var existingFilter = new UserSaveFilter(user.Id, FakeDataService.GetUniqueName("ExistingFilter"), DateTime.UtcNow, null, "search", 100, 500);
         await _dbContext.UserSaveFilter.AddAsync(existingFilter);
         await _dbContext.SaveChangesAsync();
 
-        var request = new UserSaveFilterRequest(user.Id, "ExistingFilter", [ 3 ], 20, "updatedSearch", 200, 600);
+        var request = new UserSaveFilterRequest(user.Id, existingFilter.FilterName, [ 3 ], 20, "updatedSearch", 200, 600);
 
         // Act
         await _userSaveFilterService.SaveFilter(request);
@@ -149,7 +149,7 @@ public class UserSaveFilterServiceTests
         await _dbContext.User.AddAsync(user);
         await _dbContext.SaveChangesAsync();
 
-        var filter = new UserSaveFilter(user.Id, "FilterToDelete", DateTime.UtcNow, null, "search", 100, 500);
+        var filter = new UserSaveFilter(user.Id, FakeDataService.GetUniqueName("FilterToDelete"), DateTime.UtcNow, null, "search", 100, 500);
         await _dbContext.UserSaveFilter.AddAsync(filter);
         await _dbContext.SaveChangesAsync();
 
@@ -157,7 +157,7 @@ public class UserSaveFilterServiceTests
         await _userSaveFilterService.Delete(filter.Id);
 
         // Assert
-        var deletedFilter = await _dbContext.UserSaveFilter.FindAsync(filter.Id);
+        var deletedFilter = await _dbContext.UserSaveFilter.FirstOrDefaultAsync(usf => usf.Id == filter.Id);
         Assert.Null(deletedFilter);
     }
 

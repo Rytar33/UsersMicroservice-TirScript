@@ -10,26 +10,26 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.Services;
 
-public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
+public class UserSaveFilterService(DataContext _db) : IUserSaveFilterService
 {
     public async Task<List<UserSaveFilterListItem>> GetList(int userId, Guid? sessionId = null, CancellationToken cancellationToken = default)
     {
         if (sessionId.HasValue)
         {
-            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+            var userSession = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             if (userId != userSession.UserId)
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
         }
 
-        if (!await db.User.AnyAsync(u => u.Id == userId, cancellationToken))
+        if (!await _db.User.AnyAsync(u => u.Id == userId, cancellationToken))
             throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
 
-        var userFilters = await db.UserSaveFilter
+        var userFilters = await _db.UserSaveFilter
             .Where(usf => usf.UserId == userId)
             .ToListAsync(cancellationToken);
 
-        var valuesIds = await db.UserSaveFilterRelation
+        var valuesIds = await _db.UserSaveFilterRelation
             .Where(usfr => usfr.UserSaveFilterId == userId)
             .Select(usfr => usfr.ProductCategoryParameterValueId)
             .ToListAsync(cancellationToken);
@@ -51,19 +51,19 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
     {
         if (sessionId.HasValue)
         {
-            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+            var userSession = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             if (request.UserId != userSession.UserId)
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
         }
         await new UserSaveFilterRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
-        if (!await db.User.AnyAsync(u => u.Id == request.UserId, cancellationToken))
+        if (!await _db.User.AnyAsync(u => u.Id == request.UserId, cancellationToken))
             throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
 
         // On create
-        if(await db.UserSaveFilter.AnyAsync(usf => usf.UserId == request.UserId && usf.FilterName == request.SaveFilterName, cancellationToken))
+        if(await _db.UserSaveFilter.AnyAsync(usf => usf.UserId == request.UserId && usf.FilterName == request.SaveFilterName, cancellationToken))
         {
-            var userSaveFilter = await db.UserSaveFilter.FirstOrDefaultAsync(usf => usf.UserId == request.UserId && usf.FilterName == request.SaveFilterName, cancellationToken)
+            var userSaveFilter = await _db.UserSaveFilter.FirstOrDefaultAsync(usf => usf.UserId == request.UserId && usf.FilterName == request.SaveFilterName, cancellationToken)
                 ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(UserSaveFilter)));
             
             userSaveFilter.CategoryId = request.CategoryId;
@@ -73,23 +73,23 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
 
             if (request.CategoryParametersValuesIds != null)
             {
-                var valuesRelationOnDelete = await db.UserSaveFilterRelation
+                var valuesRelationOnDelete = await _db.UserSaveFilterRelation
                 .Where(usfr => !request.CategoryParametersValuesIds.Contains(usfr.ProductCategoryParameterValueId))
                 .ToListAsync(cancellationToken);
 
                 if (valuesRelationOnDelete.Count > 0)
-                    db.UserSaveFilterRelation.RemoveRange(valuesRelationOnDelete);
+                    _db.UserSaveFilterRelation.RemoveRange(valuesRelationOnDelete);
 
                 var valuesRelationOnCreate = request.CategoryParametersValuesIds
                     .Distinct()
-                    .Where(i => !db.UserSaveFilterRelation.Any(usfr =>
+                    .Where(i => !_db.UserSaveFilterRelation.Any(usfr =>
                         usfr.ProductCategoryParameterValueId == i
                         && usfr.UserSaveFilterId == userSaveFilter.Id))
                     .Select(i => new UserSaveFilterRelation(i, userSaveFilter.Id))
                     .ToList();
 
                 if (valuesRelationOnCreate.Count > 0)
-                    await db.UserSaveFilterRelation.AddRangeAsync(valuesRelationOnCreate, cancellationToken);
+                    await _db.UserSaveFilterRelation.AddRangeAsync(valuesRelationOnCreate, cancellationToken);
             }
         }
         else // On update
@@ -103,9 +103,9 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
                 request.FromAmount,
                 request.ToAmount);
 
-            await db.UserSaveFilter.AddAsync(userSaveFilter, cancellationToken);
+            await _db.UserSaveFilter.AddAsync(userSaveFilter, cancellationToken);
 
-            await db.SaveChangesAsync(cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             if (request.CategoryParametersValuesIds != null)
             {
@@ -114,10 +114,10 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
                 .ToList();
 
                 if (userSaveFilterRelations.Count > 0)
-                    await db.UserSaveFilterRelation.AddRangeAsync(userSaveFilterRelations, cancellationToken);
+                    await _db.UserSaveFilterRelation.AddRangeAsync(userSaveFilterRelations, cancellationToken);
             }
         }
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
@@ -125,23 +125,23 @@ public class UserSaveFilterService(DataContext db) : IUserSaveFilterService
     {
         if (sessionId.HasValue)
         {
-            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+            var userSession = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
-            if (!await db.UserSaveFilter.AnyAsync(usf => usf.Id == id && userSession.UserId == usf.UserId, cancellationToken))
+            if (!await _db.UserSaveFilter.AnyAsync(usf => usf.Id == id && userSession.UserId == usf.UserId, cancellationToken))
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
         }
-        if (!db.Database.IsInMemory())
+        if (!_db.Database.IsInMemory())
         {
-            var rowsRemoved = await db.UserSaveFilter.Where(u => u.Id == id).ExecuteDeleteAsync(cancellationToken);
+            var rowsRemoved = await _db.UserSaveFilter.Where(u => u.Id == id).ExecuteDeleteAsync(cancellationToken);
             if (rowsRemoved == 0)
-                throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
+                throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(UserSaveFilter)));
         }
         else
         {
-            var userSaveFilter = await db.User.FindAsync([id], cancellationToken)
-                ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User)));
-            db.User.Remove(userSaveFilter);
-            await db.SaveChangesAsync(cancellationToken);
+            var userSaveFilter = await _db.UserSaveFilter.FirstOrDefaultAsync(u => u.Id == id, cancellationToken)
+                ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(UserSaveFilter)));
+            _db.UserSaveFilter.Remove(userSaveFilter);
+            await _db.SaveChangesAsync(cancellationToken);
         }
         return new BaseResponse();
     }

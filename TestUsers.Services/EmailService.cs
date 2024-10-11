@@ -9,15 +9,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TestUsers.Services;
 
-public class EmailService(IEmailOptions options, DataContext db) : IEmailService
+public class EmailService(IEmailOptions _options, DataContext _db) : IEmailService
 {
     public async Task SendEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        var user = await db.User.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email, cancellationToken) 
+        var user = await _db.User.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email, cancellationToken) 
             ?? throw new NotFoundException(string.Format(ErrorMessages.NotFoundError, nameof(User.Email)));
         using var emailMessage = new MimeMessage();
 
-        emailMessage.From.Add(new MailboxAddress(options.NameCompany, options.Email));
+        emailMessage.From.Add(new MailboxAddress(_options.NameCompany, _options.Email));
         emailMessage.To.Add(new MailboxAddress(user.FullName, user.Email));
         emailMessage.Subject = user.FullName;
         emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text)
@@ -27,9 +27,9 @@ public class EmailService(IEmailOptions options, DataContext db) : IEmailService
 
         using var client = new SmtpClient();
 
-        client.LocalDomain = options.Domain;
-        await client.ConnectAsync(options.Host, int.Parse(options.Port), MailKit.Security.SecureSocketOptions.StartTls, cancellationToken);
-        await client.AuthenticateAsync(options.Email, options.Password, cancellationToken);
+        client.LocalDomain = _options.Domain;
+        await client.ConnectAsync(_options.Host, int.Parse(_options.Port), MailKit.Security.SecureSocketOptions.StartTls, cancellationToken);
+        await client.AuthenticateAsync(_options.Email, _options.Password, cancellationToken);
         await client.SendAsync(emailMessage, cancellationToken);
 
         await client.DisconnectAsync(true, cancellationToken);

@@ -4,7 +4,7 @@ using TestUsers.Services.Interfaces.Services;
 
 namespace TestUsers.WebSocketApi.Controllers;
 
-public class AuthWsController(IAuthService authService) : BaseWsController
+public class AuthWsController(IAuthService _authService) : BaseWsController
 {
     public CurrentWsUser? GetCurrentUser()
     {
@@ -13,14 +13,14 @@ public class AuthWsController(IAuthService authService) : BaseWsController
 
     public async Task<bool> Login(AuthLoginRequest request)
     {
-        var response = await authService.Login(request, User.SessionToken);
+        var response = await _authService.Login(request, User.SessionToken);
         await User.AuthorizedUser(new CurrentWsUser() { Id = response.IdUser, IsAuthorized = true });
         return true;
     }
 
     public async Task<bool> Logout()
     {
-        await authService.Logout(Socket.SessionId);
+        await _authService.Logout(Socket.SessionId);
         await User.UnauthorizedUser(Socket);
         return true;
     }

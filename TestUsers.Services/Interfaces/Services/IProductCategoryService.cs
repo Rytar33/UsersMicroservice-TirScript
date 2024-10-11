@@ -7,6 +7,8 @@ public interface IProductCategoryService
 {
     Task<List<ProductCategoryListItem>> GetListByParent(ProductCategoryGetListByParentRequest request, CancellationToken cancellationToken = default);  //получить список категорий по родительской категории
 
+    Task<List<ProductCategoryTreeItem>> GetTreeByParent(int? parentCategoryId, CancellationToken cancellationToken = default);
+
     Task<List<ProductCategoryTreeItem>> GetTree(CancellationToken cancellationToken = default);  //получить дерево категорий
 
     Task<BaseResponse> Create(ProductCategoryCreateRequest request, CancellationToken cancellationToken = default);

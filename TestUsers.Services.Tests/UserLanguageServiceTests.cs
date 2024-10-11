@@ -36,7 +36,7 @@ public class UserLanguageServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        var languages = new List<Language> { new("en", "English"), new("ro", "Romanian") };
+        var languages = new List<Language> { new(FakeDataService.GetUniqueName("en"), FakeDataService.GetUniqueName("English")), new(FakeDataService.GetUniqueName("ro"), FakeDataService.GetUniqueName("Romanian")) };
         await _dbContext.User.AddAsync(user);
         await _dbContext.Language.AddRangeAsync(languages);
         await _dbContext.SaveChangesAsync();
@@ -65,7 +65,7 @@ public class UserLanguageServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        var language = new Language("en", "English");
+        var language = new Language(FakeDataService.GetUniqueName("en"), FakeDataService.GetUniqueName("English"));
         await _dbContext.User.AddAsync(user);
         await _dbContext.Language.AddAsync(language);
         await _dbContext.SaveChangesAsync();
@@ -86,7 +86,7 @@ public class UserLanguageServiceTests
     {
         // Arrange
         var user = FakeDataService.GetGenerationUser();
-        var languages = new List<Language> { new("en", "English"), new("ro", "Romanian"), new("ru", "Russian") };
+        var languages = new List<Language> { new(FakeDataService.GetUniqueName("en"), FakeDataService.GetUniqueName("English")), new(FakeDataService.GetUniqueName("ro"), FakeDataService.GetUniqueName("Romanian")), new(FakeDataService.GetUniqueName("ru"), FakeDataService.GetUniqueName("Russian")) };
         await _dbContext.User.AddAsync(user);
         await _dbContext.Language.AddRangeAsync(languages);
         await _dbContext.SaveChangesAsync();

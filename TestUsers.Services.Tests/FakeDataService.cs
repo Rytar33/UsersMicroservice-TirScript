@@ -17,4 +17,7 @@ public static class FakeDataService
     /// <returns></returns>
     public static User GetGenerationUser() 
         => new(Faker.Internet.Email(), Faker.Name.FullName(), Faker.Internet.Password().GetSha256());
+
+    public static string GetUniqueName(string value)
+        => Guid.NewGuid().ToString() + "_" + value;
 }

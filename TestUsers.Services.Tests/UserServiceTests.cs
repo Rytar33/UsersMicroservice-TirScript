@@ -204,7 +204,7 @@ public class UserServiceTests
 
         // Assert
 
-        var userFound = await _context.User.FindAsync(user.Id);
+        var userFound = await _context.User.FirstOrDefaultAsync(u => u.Id == user.Id);
         Assert.NotNull(userFound?.RecoveryToken); // Токен должен быть сгенерирован
     }
 

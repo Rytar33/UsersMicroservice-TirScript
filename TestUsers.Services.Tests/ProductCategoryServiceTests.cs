@@ -33,11 +33,11 @@ public class ProductCategoryServiceTests
     public async Task GetListByParent_ShouldReturnProductCategories_WhenConditionsMatch()
     {
         // Arrange
-        var parentCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var parentCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()));
         await _dataContext.ProductCategory.AddAsync(parentCategory);
         await _dataContext.SaveChangesAsync();
 
-        var category = new ProductCategory(_faker.Commerce.Categories(1)[0], parentCategory.Id);
+        var category = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()), parentCategory.Id);
         await _dataContext.ProductCategory.AddAsync(category);
         await _dataContext.SaveChangesAsync();
 
@@ -58,11 +58,11 @@ public class ProductCategoryServiceTests
     public async Task GetTree_ShouldBuildCategoryTree()
     {
         // Arrange
-        var parentCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var parentCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()));
         await _dataContext.ProductCategory.AddAsync(parentCategory);
         await _dataContext.SaveChangesAsync();
 
-        var childCategory = new ProductCategory(_faker.Commerce.Categories(1)[0], parentCategory.Id);
+        var childCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()), parentCategory.Id);
         await _dataContext.ProductCategory.AddAsync(childCategory);
         await _dataContext.SaveChangesAsync();
 
@@ -78,13 +78,78 @@ public class ProductCategoryServiceTests
     }
 
     /// <summary>
+    /// Тест для метода GetTreeByParent, проверяющий построение дерева категорий по родителю.
+    /// </summary>
+    [Fact]
+    public async Task GetTreeByParent_ShouldBuildCategoryTreeByParent_WhenParentIdIsProvided()
+    {
+        // Arrange
+        var parentCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()));
+        await _dataContext.ProductCategory.AddAsync(parentCategory);
+        await _dataContext.SaveChangesAsync();
+
+        var childCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()), parentCategory.Id);
+        await _dataContext.ProductCategory.AddAsync(childCategory);
+        await _dataContext.SaveChangesAsync();
+
+        var grandChildCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()), childCategory.Id);
+        await _dataContext.ProductCategory.AddAsync(grandChildCategory);
+        await _dataContext.SaveChangesAsync();
+
+        // Act
+        var result = await _productCategoryService.GetTreeByParent(parentCategory.Id);
+
+        // Assert
+        Assert.Single(result); // Должен быть только один родитель
+        var parentNode = result.First();
+        Assert.Equal(parentCategory.Name, parentNode.Name);
+        Assert.Single(parentNode.ChildCategories); // Должен быть один дочерний элемент
+
+        var childNode = parentNode.ChildCategories.First();
+        Assert.Equal(childCategory.Name, childNode.Name);
+        Assert.Single(childNode.ChildCategories); // У дочернего элемента также должен быть свой дочерний элемент
+
+        var grandChildNode = childNode.ChildCategories.First();
+        Assert.Equal(grandChildCategory.Name, grandChildNode.Name);
+        Assert.Empty(grandChildNode.ChildCategories); // У внука не должно быть дочерних элементов
+    }
+
+    /// <summary>
+    /// Тест для метода GetTreeByParent, проверяющий возврат всего дерева категорий, если родитель не указан.
+    /// </summary>
+    [Fact]
+    public async Task GetTreeByParent_ShouldReturnFullTree_WhenParentIdIsNull()
+    {
+        // Arrange
+        var rootCategory1 = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()));
+        var rootCategory2 = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()));
+
+        await _dataContext.ProductCategory.AddRangeAsync(rootCategory1, rootCategory2);
+        await _dataContext.SaveChangesAsync();
+
+        var childCategory1 = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()), rootCategory1.Id);
+        var childCategory2 = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()), rootCategory2.Id);
+
+        await _dataContext.ProductCategory.AddRangeAsync(childCategory1, childCategory2);
+        await _dataContext.SaveChangesAsync();
+
+        // Act
+        var result = await _productCategoryService.GetTreeByParent(null);
+
+        // Assert
+        Assert.Contains(result, r => r.Name == rootCategory1.Name);
+        Assert.Contains(result, r => r.Name == rootCategory2.Name);
+    }
+
+
+    /// <summary>
     /// Тест для метода Create, проверяющий успешное создание новой категории.
     /// </summary>
     [Fact]
     public async Task Create_ShouldAddNewCategory_WhenValidRequest()
     {
         // Arrange
-        var request = new ProductCategoryCreateRequest(_faker.Commerce.Categories(1)[0], null);
+        var request = new ProductCategoryCreateRequest(_faker.Commerce.Product(), null);
 
         // Act
         await _productCategoryService.Create(request);
@@ -102,17 +167,17 @@ public class ProductCategoryServiceTests
     public async Task Update_ShouldModifyCategory_WhenValidRequest()
     {
         // Arrange
-        var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var category = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()));
         await _dataContext.ProductCategory.AddAsync(category);
         await _dataContext.SaveChangesAsync();
 
-        var request = new ProductCategoryUpdateRequest(category.Id, _faker.Commerce.Categories(1)[0], null);
+        var request = new ProductCategoryUpdateRequest(category.Id, _faker.Commerce.Product(), null);
 
         // Act
         await _productCategoryService.Update(request);
 
         // Assert
-        var updatedCategory = await _dataContext.ProductCategory.FindAsync(category.Id);
+        var updatedCategory = await _dataContext.ProductCategory.FirstOrDefaultAsync(pc => pc.Id == category.Id);
         Assert.NotNull(updatedCategory);
         Assert.Equal(request.Name, updatedCategory.Name);
     }
@@ -124,7 +189,7 @@ public class ProductCategoryServiceTests
     public async Task Delete_ShouldRemoveCategory_WhenCategoryExists()
     {
         // Arrange
-        var category = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var category = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Product()));
         await _dataContext.ProductCategory.AddAsync(category);
         await _dataContext.SaveChangesAsync();
 
@@ -132,7 +197,7 @@ public class ProductCategoryServiceTests
         await _productCategoryService.Delete(category.Id);
 
         // Assert
-        var deletedCategory = await _dataContext.ProductCategory.FindAsync(category.Id);
+        var deletedCategory = await _dataContext.ProductCategory.FirstOrDefaultAsync(pc => pc.Id == category.Id);
         Assert.Null(deletedCategory);
     }
 

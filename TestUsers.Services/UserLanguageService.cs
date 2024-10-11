@@ -10,11 +10,11 @@ using TestUsers.Services.Exceptions;
 
 namespace TestUsers.Services;
 
-public class UserLanguageService(DataContext db) : IUserLanguageService
+public class UserLanguageService(DataContext _db) : IUserLanguageService
 {
     public async Task<List<UserLanguageItemResponse>> GetList(int userId, CancellationToken cancellationToken = default)
     {
-        return await db.UserLanguage
+        return await _db.UserLanguage
             .Where(ul => ul.UserId == userId)
             .Select(ul => 
             new UserLanguageItemResponse(
@@ -29,17 +29,17 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
     {
         if (sessionId.HasValue)
         {
-            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+            var userSession = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             if (request.UserId != userSession.UserId)
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
         }
         await new AddLanguageToUserValidator().ValidateAndThrowAsync(request, cancellationToken);
-        if (await db.UserLanguage.AnyAsync(ul => ul.LanguageId == request.LanguageId && ul.UserId == request.UserId, cancellationToken))
+        if (await _db.UserLanguage.AnyAsync(ul => ul.LanguageId == request.LanguageId && ul.UserId == request.UserId, cancellationToken))
             throw new ConcidedException(string.Format(ErrorMessages.CoincideError, nameof(UserLanguage.Language), nameof(UserLanguage.User)));
         var userLanguage = new UserLanguage(request.DateLearn, request.UserId, request.LanguageId);
-        await db.UserLanguage.AddAsync(userLanguage, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.UserLanguage.AddAsync(userLanguage, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
         return new BaseResponse();
     }
 
@@ -47,7 +47,7 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
     {
         if (sessionId.HasValue)
         {
-            var userSession = await db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
+            var userSession = await _db.UserSession.AsNoTracking().FirstOrDefaultAsync(us => us.SessionId == sessionId, cancellationToken)
                 ?? throw new UnAuthorizedException(ErrorMessages.UnAuthError);
             if (request.UserId != userSession.UserId)
                 throw new ForbiddenException(ErrorMessages.ForbiddenError);
@@ -56,7 +56,7 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
         await new SaveUserLanguagesRequestValidator().ValidateAndThrowAsync(request, cancellationToken);
 
         // Загружаем данные в память
-        var existingUserLanguages = await db.UserLanguage
+        var existingUserLanguages = await _db.UserLanguage
             .Where(userLanguage => userLanguage.UserId == request.UserId)
             .ToListAsync(cancellationToken);
 
@@ -66,7 +66,7 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
             .ToList();
 
         if (oldUserLanguagesDeleting.Count != 0)
-            db.UserLanguage.RemoveRange(oldUserLanguagesDeleting);
+            _db.UserLanguage.RemoveRange(oldUserLanguagesDeleting);
 
         // Определяем языки для создания
         var createUserLanguages = request.Languages
@@ -75,9 +75,9 @@ public class UserLanguageService(DataContext db) : IUserLanguageService
             .ToList();
 
         if (createUserLanguages.Count != 0)
-            await db.UserLanguage.AddRangeAsync(createUserLanguages, cancellationToken);
+            await _db.UserLanguage.AddRangeAsync(createUserLanguages, cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
 
         return new BaseResponse();
     }

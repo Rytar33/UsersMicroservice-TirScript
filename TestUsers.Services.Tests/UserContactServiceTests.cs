@@ -38,7 +38,7 @@ public class UserContactServiceTests
         var user = FakeDataService.GetGenerationUser();
         await _dataContext.User.AddAsync(user);
         await _dataContext.SaveChangesAsync();
-        var contact = new UserContact(_faker.Lorem.Word(), _faker.Phone.PhoneNumber(), user.Id);
+        var contact = new UserContact(FakeDataService.GetUniqueName(_faker.Lorem.Word()), FakeDataService.GetUniqueName(_faker.Phone.PhoneNumber()), user.Id);
         await _dataContext.UserContact.AddAsync(contact);
         await _dataContext.SaveChangesAsync();
 
@@ -75,9 +75,9 @@ public class UserContactServiceTests
         await _dataContext.SaveChangesAsync();
         var contacts = new List<UserContact>()
         {
-            new(_faker.Lorem.Word(), _faker.Phone.PhoneNumber(), user.Id),
-            new(_faker.Lorem.Word(), _faker.Internet.Url(), user.Id),
-            new(_faker.Lorem.Word(), _faker.Internet.Url(), user.Id)
+            new(FakeDataService.GetUniqueName(_faker.Lorem.Word()), FakeDataService.GetUniqueName(_faker.Phone.PhoneNumber()), user.Id),
+            new(FakeDataService.GetUniqueName(_faker.Lorem.Word()), FakeDataService.GetUniqueName(_faker.Internet.Url()), user.Id),
+            new(FakeDataService.GetUniqueName(_faker.Lorem.Word()), FakeDataService.GetUniqueName(_faker.Internet.Url()), user.Id)
         };
         await _dataContext.UserContact.AddRangeAsync(contacts);
         await _dataContext.SaveChangesAsync();
@@ -85,7 +85,7 @@ public class UserContactServiceTests
         var request = new UserContactsSaveRequest(
             user.Id, 
             [
-                new UserContactItem(null, _faker.Lorem.Word(), _faker.Internet.Url()),
+                new UserContactItem(null, FakeDataService.GetUniqueName(_faker.Lorem.Word()), FakeDataService.GetUniqueName(_faker.Internet.Url())),
                 new UserContactItem(contacts[0].Id, contacts[0].Name, contacts[0].Value),
                 new UserContactItem(contacts[1].Id, contacts[1].Name, contacts[1].Value),
             ]);

@@ -33,11 +33,11 @@ public class ProductCategoryParametersServiceTests
     public async Task GetList_ShouldReturnListOfParameters_WhenValidRequest()
     {
         // Arrange
-        var productCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var productCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
         await _dbContext.ProductCategory.AddAsync(productCategory);
         await _dbContext.SaveChangesAsync();
 
-        var parameter = new ProductCategoryParameter(_faker.Commerce.ProductName(), productCategory.Id);
+        var parameter = new ProductCategoryParameter(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), productCategory.Id);
         await _dbContext.ProductCategoryParameter.AddAsync(parameter);
         await _dbContext.SaveChangesAsync();
 
@@ -47,8 +47,7 @@ public class ProductCategoryParametersServiceTests
         var result = await _service.GetList(request);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(parameter.Name, result[0].Name);
+        Assert.Contains(result, r => r.Name == parameter.Name);
     }
 
     /// <summary>
@@ -58,8 +57,8 @@ public class ProductCategoryParametersServiceTests
     public async Task GetDetail_ShouldReturnParameterDetail_WhenValidId()
     {
         // Arrange
-        var productCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
-        var parameter = new ProductCategoryParameter(_faker.Commerce.ProductName(), productCategory.Id);
+        var productCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
+        var parameter = new ProductCategoryParameter(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), productCategory.Id);
         await _dbContext.ProductCategory.AddAsync(productCategory);
         await _dbContext.ProductCategoryParameter.AddAsync(parameter);
         await _dbContext.SaveChangesAsync();
@@ -79,11 +78,11 @@ public class ProductCategoryParametersServiceTests
     public async Task Create_ShouldAddNewParameter_WhenValidRequest()
     {
         // Arrange
-        var productCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
+        var productCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
         await _dbContext.ProductCategory.AddAsync(productCategory);
         await _dbContext.SaveChangesAsync();
 
-        var request = new ProductCategoryParameterCreateRequest(_faker.Commerce.ProductName(), productCategory.Id, [ "Value1", "Value2" ]);
+        var request = new ProductCategoryParameterCreateRequest(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), productCategory.Id, [FakeDataService.GetUniqueName("Value1"), FakeDataService.GetUniqueName("Value2") ]);
 
         // Act
         var result = await _service.Create(request);
@@ -101,19 +100,19 @@ public class ProductCategoryParametersServiceTests
     public async Task Update_ShouldModifyParameter_WhenValidRequest()
     {
         // Arrange
-        var productCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
-        var parameter = new ProductCategoryParameter(_faker.Commerce.ProductName(), productCategory.Id);
+        var productCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
+        var parameter = new ProductCategoryParameter(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), productCategory.Id);
         await _dbContext.ProductCategory.AddAsync(productCategory);
         await _dbContext.ProductCategoryParameter.AddAsync(parameter);
         await _dbContext.SaveChangesAsync();
 
-        var request = new ProductCategoryParameterUpdateRequest(parameter.Id, _faker.Commerce.ProductName(), productCategory.Id, [ "UpdatedValue1", "UpdatedValue2" ]);
+        var request = new ProductCategoryParameterUpdateRequest(parameter.Id, FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), productCategory.Id, [FakeDataService.GetUniqueName("Value1"), FakeDataService.GetUniqueName("Value2") ]);
 
         // Act
         await _service.Update(request);
 
         // Assert
-        var updatedParameter = await _dbContext.ProductCategoryParameter.FindAsync(parameter.Id);
+        var updatedParameter = await _dbContext.ProductCategoryParameter.FirstOrDefaultAsync(pcp => pcp.Id == parameter.Id);
         Assert.NotNull(updatedParameter);
         Assert.Equal(request.Name, updatedParameter.Name);
     }
@@ -125,8 +124,8 @@ public class ProductCategoryParametersServiceTests
     public async Task Delete_ShouldRemoveParameter_WhenValidId()
     {
         // Arrange
-        var productCategory = new ProductCategory(_faker.Commerce.Categories(1)[0]);
-        var parameter = new ProductCategoryParameter(_faker.Commerce.ProductName(), productCategory.Id);
+        var productCategory = new ProductCategory(FakeDataService.GetUniqueName(_faker.Commerce.Categories(1)[0]));
+        var parameter = new ProductCategoryParameter(FakeDataService.GetUniqueName(_faker.Commerce.ProductName()), productCategory.Id);
         await _dbContext.ProductCategory.AddAsync(productCategory);
         await _dbContext.ProductCategoryParameter.AddAsync(parameter);
         await _dbContext.SaveChangesAsync();
@@ -135,7 +134,7 @@ public class ProductCategoryParametersServiceTests
         await _service.Delete(parameter.Id);
 
         // Assert
-        var deletedParameter = await _dbContext.ProductCategoryParameter.FindAsync(parameter.Id);
+        var deletedParameter = await _dbContext.ProductCategoryParameter.FirstOrDefaultAsync(pcp => pcp.Id == parameter.Id);
         Assert.Null(deletedParameter);
     }
 

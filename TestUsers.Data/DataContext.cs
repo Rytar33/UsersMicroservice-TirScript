@@ -4,7 +4,7 @@ using TestUsers.Data.Models;
 
 namespace TestUsers.Data;
 
-public sealed class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
+public sealed class DataContext(DbContextOptions<DataContext> _options) : DbContext(_options)
 {
     /// <summary>
     /// Таблица "Пользователь"
